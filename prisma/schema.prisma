@@ -14,19 +14,152 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    createdBy   User   @relation(fields: [createdById], references: [id])
-    createdById String
-
-    @@index([name])
+// ========== ENUMS ==========
+enum SubscriptionPlan {
+    STARTER
+    GROWTH
+    ENTERPRISE
 }
 
-// Necessary for Next auth
+enum SubscriptionStatus {
+    ACTIVE
+    TRIAL
+    CANCELED
+    EXPIRED
+}
+
+// ========== LAB USER ROLES ==========
+enum Role {
+    OWNER // Full control of lab
+    ADMIN // Can manage users, reports, billing
+    STAFF // Regular staff (billing, reports, history)
+    VIEWER // Limited read-only access
+}
+
+enum UserTitle {
+    MR
+    MRS
+    MS
+    DR
+    PROF
+}
+
+enum UserStatus {
+    ACTIVE
+    INACTIVE
+    PENDING
+    DELETED
+}
+
+enum Gender {
+    MALE
+    FEMALE
+    OTHER
+}
+
+enum TenantStatus {
+    ACTIVE
+    INACTIVE
+    PENDING
+    DELETED
+}
+
+// ========== TENANT / LAB ==========
+model Tenant {
+    id           String    @id @default(cuid())
+    name         String
+    slug         String    @unique // used in URLs, e.g. lab1.booklims.com
+    contactEmail String
+    contactPhone String?
+    address      String?
+    city         String?
+    state        String?
+    zip          String?
+    country      String?
+    isActive     Boolean   @default(true)
+    createdAt    DateTime  @default(now())
+    updatedAt    DateTime  @updatedAt
+    deletedAt    DateTime?
+
+    // Relations
+    users         TenantUser[]
+    subscriptions Subscription[]
+    auditLogs     AuditLog[]
+}
+
+// ========== USERS ==========
+model User {
+    id           String     @id @default(cuid())
+    userTitle    UserTitle? @default(MR)
+    name         String?
+    email        String?    @unique
+    image        String?
+    passwordHash String? // optional if you use email/password login
+    isSuperAdmin Boolean    @default(false) // SaaS-level owner/admin
+    status       UserStatus @default(ACTIVE)
+    dateOfBirth  DateTime?
+    phone        String?
+    address      String?
+    city         String?
+    state        String?
+    zip          String?
+    country      String?
+    createdAt    DateTime   @default(now())
+    updatedAt    DateTime   @updatedAt
+    deletedAt    DateTime?
+
+    // Relations
+    tenants   TenantUser[]
+    sessions  Session[]
+    accounts  Account[]
+    auditLogs AuditLog[]
+}
+
+// ========== TENANT USERS ==========
+model TenantUser {
+    id        String    @id @default(cuid())
+    role      Role      @default(STAFF)
+    createdAt DateTime  @default(now())
+    deletedAt DateTime?
+
+    // Relations
+    userId   String
+    tenantId String
+    user     User   @relation(fields: [userId], references: [id])
+    tenant   Tenant @relation(fields: [tenantId], references: [id])
+}
+
+// ========== SUBSCRIPTION / BILLING ==========
+model Subscription {
+    id          String             @id @default(cuid())
+    plan        SubscriptionPlan   @default(STARTER)
+    status      SubscriptionStatus @default(ACTIVE)
+    startDate   DateTime           @default(now())
+    endDate     DateTime?
+    renewalDate DateTime?
+    stripeId    String? // or Razorpay/PayU etc
+    createdAt   DateTime           @default(now())
+
+    // Relations
+    tenantId String
+    tenant   Tenant @relation(fields: [tenantId], references: [id])
+}
+
+// ========== AUDIT LOG ==========
+model AuditLog {
+    id        String   @id @default(cuid())
+    action    String // e.g., "USER_CREATED", "BILLING_UPDATED"
+    metadata  Json?
+    createdAt DateTime @default(now())
+
+    // Relations
+    tenantId String
+    userId   String?
+    tenant   Tenant  @relation(fields: [tenantId], references: [id])
+    user     User?   @relation(fields: [userId], references: [id])
+}
+
+// ========== NEXTAUTH MODELS ==========
 model Account {
     id                       String  @id @default(cuid())
     userId                   String
@@ -52,17 +185,6 @@ model Session {
     userId       String
     expires      DateTime
     user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model User {
-    id            String    @id @default(cuid())
-    name          String?
-    email         String?   @unique
-    emailVerified DateTime?
-    image         String?
-    accounts      Account[]
-    sessions      Session[]
-    posts         Post[]
 }
 
 model VerificationToken {
