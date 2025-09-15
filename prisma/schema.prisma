@@ -103,6 +103,13 @@ enum ReportStatus {
     DELIVERED
 }
 
+enum ReportChangeLogAction {
+    CREATED
+    UPDATED
+    APPROVED
+    REJECTED
+}
+
 enum PaymentType {
     CASH
     UPI
@@ -127,6 +134,12 @@ enum InvoiceStatus {
     CANCELLED
 }
 
+enum DoctorCommissionStatus {
+    PENDING
+    PAID
+    FAILED
+}
+
 enum SyncOperation {
     CREATE
     UPDATE
@@ -137,6 +150,33 @@ enum SyncStatus {
     PENDING
     SYNCED
     FAILED
+    CONFLICT
+    RESOLVED
+    PROCESSING
+}
+
+enum AuditLogAction {
+    CREATED
+    UPDATED
+    DELETED
+    VIEWED
+    APPROVED
+}
+
+// ========== SHARED MODELS ==========
+model Notification {
+    id        String    @id @default(cuid())
+    tenantId  String
+    tenant    Tenant    @relation(fields: [tenantId], references: [id])
+    userId    String?
+    user      User?     @relation(fields: [userId], references: [id])
+    type      String // info, alert, reminder, system
+    title     String
+    message   String
+    isRead    Boolean   @default(false)
+    metadata  Json?
+    createdAt DateTime  @default(now())
+    readAt    DateTime?
 }
 
 // ========== SHARED ADDRESS MODEL ==========
@@ -204,19 +244,21 @@ model Tenant {
     maxUsers       Int     @default(5)
 
     // Relations
-    users           TenantUser[]
-    subscriptions   Subscription[]
-    auditLogs       AuditLog[]
-    ServiceCategory ServiceCategory[]
-    Service         Service[]
-    Customer        Customer[]
-    Doctor          Doctor[]
-    Invoice         Invoice[]
-    Report          Report[]
-    ReportTemplate  ReportTemplate[]
-    tenantAddresses TenantAddress[]
-    SyncLog         SyncLog[]
-    roles           TenantRole[] // Tenant-specific roles
+    users                TenantUser[]
+    subscriptions        Subscription[]
+    auditLogs            AuditLog[]
+    ServiceCategory      ServiceCategory[]
+    Service              Service[]
+    Customer             Customer[]
+    Doctor               Doctor[]
+    ReportInvoice        ReportInvoice[]
+    Report               Report[]
+    ReportTemplate       ReportTemplate[]
+    tenantAddresses      TenantAddress[]
+    SyncLog              SyncLog[]
+    Roles                TenantRole[] // Tenant-specific roles
+    ReportInvoicePayment ReportInvoicePayment[]
+    Notification         Notification[]
 
     // Indexes
     @@index([slug])
@@ -259,11 +301,13 @@ model User {
     deletedAt    DateTime?
 
     // Relations
-    tenants       TenantUser[]
-    sessions      Session[]
-    accounts      Account[]
-    auditLogs     AuditLog[]
-    userAddresses UserAddress[]
+    tenants         TenantUser[]
+    sessions        Session[]
+    accounts        Account[]
+    auditLogs       AuditLog[]
+    userAddresses   UserAddress[]
+    ReportChangeLog ReportChangeLog[]
+    Notification    Notification[]
 
     // Indexes
     @@index([email])
@@ -362,7 +406,7 @@ model TenantUser {
     user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
     tenant        Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
     Report        Report[]          @relation("ReportCreatedBy")
-    reportUpdates ReportChangeLog[] @relation("ReportChangedBy")
+    reportUpdates ReportChangeLog[] @relation("ReportChangedByTenantUser")
     collectedBy   Report[]          @relation("SampleCollectedBy")
 
     // Indexes
@@ -396,10 +440,14 @@ model Subscription {
 
 // ========== AUDIT LOG ==========
 model AuditLog {
-    id        String   @id @default(cuid())
-    action    String
+    id        String         @id @default(cuid())
+    action    AuditLogAction @default(CREATED)
     metadata  Json?
-    createdAt DateTime @default(now())
+    entity    String? // e.g., Report, Invoice, Payment
+    entityId  String?
+    ipAddress String?
+    userAgent String?
+    createdAt DateTime       @default(now())
 
     // Relations
     tenantId String
@@ -461,10 +509,11 @@ model SyncLog {
     tenantId  String
     entity    String
     entityId  String
-    changes   Json
+    details   Json?
     status    SyncStatus    @default(PENDING)
     operation SyncOperation @default(UPDATE)
     syncedAt  DateTime      @default(now())
+    startedAt DateTime      @default(now())
 
     tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -506,13 +555,14 @@ model Service {
     deletedAt   DateTime?
 
     // Relations
-    tenantId       String
-    categoryId     String?
-    tenant         Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-    category       ServiceCategory? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-    InvoiceItem    InvoiceItem[]
-    ReportDetail   ReportDetail[]
-    ReportTemplate ReportTemplate[]
+    tenantId          String
+    categoryId        String?
+    Tenant            Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+    Category          ServiceCategory?    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+    ReportInvoiceItem ReportInvoiceItem[]
+    ReportDetail      ReportDetail[]
+    ReportTemplate    ReportTemplate[]
+    ReportInvoice     ReportInvoice[]
 
     // Indexes
     @@index([tenantId])
@@ -551,7 +601,7 @@ model Customer {
     // Relations
     tenantId          String
     tenant            Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-    Invoice           Invoice[]
+    ReportInvoice     ReportInvoice[]
     Report            Report[]
     customerAddresses CustomerAddress[]
 
@@ -601,7 +651,7 @@ model Doctor {
     // Relations
     tenantId            String
     tenant              Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-    Invoice             Invoice[]
+    ReportInvoice       ReportInvoice[]
     Report              Report[]
     doctorAddresses     DoctorAddress[]
     doctorCommissions   DoctorCommission[]
@@ -657,16 +707,20 @@ model DoctorCommission {
 }
 
 model DoctorCommissionLog {
-    id           String   @id @default(cuid())
-    doctorId     String
-    invoiceId    String?
-    commissionId String
-    createdAt    DateTime @default(now())
-    updatedAt    DateTime @default(now()) @updatedAt
+    id               String                 @id @default(cuid())
+    doctorId         String
+    invoiceId        String?
+    commissionId     String
+    reportDetailId   String?
+    commissionAmt    Float
+    commissionStatus DoctorCommissionStatus @default(PENDING)
+    createdAt        DateTime               @default(now())
+    updatedAt        DateTime               @default(now()) @updatedAt
 
-    commission DoctorCommission @relation(fields: [commissionId], references: [id], onDelete: Cascade)
-    doctor     Doctor           @relation(fields: [doctorId], references: [id], onDelete: Cascade)
-    invoice    Invoice?         @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+    commission   DoctorCommission @relation(fields: [commissionId], references: [id], onDelete: Cascade)
+    doctor       Doctor           @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+    invoice      ReportInvoice?   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+    reportDetail ReportDetail?    @relation(fields: [reportDetailId], references: [id], onDelete: Cascade)
 
     // Indexes
     @@index([doctorId])
@@ -704,88 +758,118 @@ model DoctorCommissionPayment {
 }
 
 // ========== BILLING ==========
-model Invoice {
-    id            String        @id @default(cuid())
-    totalAmount   Float
-    discount      Float         @default(0)
-    netAmount     Float
-    paymentType   PaymentType
-    status        InvoiceStatus @default(PAID)
-    issuedAt      DateTime      @default(now())
-    createdAt     DateTime      @default(now())
-    updatedAt     DateTime      @default(now()) @updatedAt
-    deletedAt     DateTime?
-    invoiceNumber String        @unique
+model ReportInvoice {
+    id          String        @id @default(cuid())
+    totalAmount Float
+    discount    Float         @default(0)
+    netAmount   Float
+    paymentType PaymentType
+    status      InvoiceStatus @default(PAID)
+    issuedAt    DateTime      @default(now())
+    createdAt   DateTime      @default(now())
+    updatedAt   DateTime      @default(now()) @updatedAt
+    deletedAt   DateTime?
 
     // Relations
-    tenantId            String
-    customerId          String
-    doctorId            String?
-    tenant              Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-    customer            Customer              @relation(fields: [customerId], references: [id], onDelete: Cascade)
-    doctor              Doctor?               @relation(fields: [doctorId], references: [id], onDelete: Cascade)
-    items               InvoiceItem[]
-    Report              Report[]
-    doctorCommissionLog DoctorCommissionLog[]
+    tenantId   String
+    customerId String
+    doctorId   String?
+
+    tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+    customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+    doctor   Doctor?  @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+    items     ReportInvoiceItem[]
+    payments  ReportInvoicePayment[]
+    logs      DoctorCommissionLog[]
+    Report    Report[]
+    Service   Service?               @relation(fields: [serviceId], references: [id])
+    serviceId String?
 
     // Indexes
     @@index([tenantId])
     @@index([customerId])
-    @@index([status])
-    @@index([createdAt])
-    @@index([updatedAt])
-    @@index([deletedAt])
+    @@index([doctorId])
     @@index([issuedAt])
-    @@index([tenantId, status])
-    @@index([tenantId, createdAt])
-    @@index([customerId, status])
-    @@index([invoiceNumber])
+    @@index([status])
+    @@index([deletedAt])
 }
 
-model InvoiceItem {
-    id        String    @id @default(cuid())
+model ReportInvoiceItem {
+    id        String   @id @default(cuid())
+    quantity  Int      @default(1)
     price     Float
-    quantity  Int       @default(1)
+    discount  Float    @default(0)
     total     Float
-    createdAt DateTime  @default(now())
-    updatedAt DateTime  @default(now()) @updatedAt
-    deletedAt DateTime?
+    createdAt DateTime @default(now())
 
     // Relations
     invoiceId String
     serviceId String
-    invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-    service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+    invoice ReportInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+    service Service       @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
     // Indexes
     @@index([invoiceId])
     @@index([serviceId])
-    @@index([createdAt])
+}
+
+model ReportInvoicePayment {
+    id            String        @id @default(cuid())
+    amount        Float
+    method        PaymentMethod
+    status        PaymentStatus @default(PENDING)
+    referenceNo   String?
+    transactionId String?
+    paidAt        DateTime?
+    createdAt     DateTime      @default(now())
+    updatedAt     DateTime      @default(now()) @updatedAt
+    deletedAt     DateTime?
+
+    // Relations
+    invoiceId String
+    tenantId  String
+
+    invoice ReportInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+    tenant  Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+    // Indexes
+    @@index([invoiceId])
+    @@index([tenantId])
+    @@index([status])
+    @@index([paidAt])
+    @@index([referenceNo])
+    @@index([transactionId])
+    @@index([deletedAt])
 }
 
 // ========== REPORT TEMPLATE MANAGEMENT ==========
 model ReportTemplate {
     id        String    @id @default(cuid())
+    name      String
+    unit      String?
+    reference String?
+    notes     String?
+    isActive  Boolean   @default(true)
     createdAt DateTime  @default(now())
     updatedAt DateTime  @default(now()) @updatedAt
     deletedAt DateTime?
-    name      String
-    notes     String?
-    isActive  Boolean   @default(true)
 
     // Relations
-    tenantId   String
-    serviceId  String?
-    tenant     Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-    service    Service?          @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-    parameters ReportParameter[]
+    tenantId  String
+    serviceId String
+
+    tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+    service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+    ReportDetails   ReportDetail[]
+    ReportParameter ReportParameter[]
 
     // Indexes
     @@index([tenantId])
     @@index([serviceId])
-    @@index([name])
     @@index([deletedAt])
-    @@index([isActive])
 }
 
 model ReportParameter {
@@ -861,7 +945,7 @@ model Report {
     tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
     customer  Customer          @relation(fields: [customerId], references: [id], onDelete: Cascade)
     doctor    Doctor?           @relation(fields: [doctorId], references: [id], onDelete: Cascade)
-    invoice   Invoice           @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+    invoice   ReportInvoice     @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
     details   ReportDetail[]
     updateLog ReportChangeLog[]
 
@@ -872,31 +956,34 @@ model Report {
     labAddress      TenantAddress?   @relation(fields: [labAddressId], references: [id])
 
     // Indexes
-    @@index([tenantId, status])
-    @@index([customerId])
-    @@index([createdAt])
-    @@index([reportCode])
     @@index([invoiceId])
+    @@index([tenantId])
+    @@index([doctorId])
+    @@index([status])
     @@index([deletedAt])
     @@index([updatedAt])
     @@index([createdBy])
     @@index([collectedBy])
     @@index([customerAddressId])
     @@index([labAddressId])
+    @@index([reportCode])
 }
 
 // ========== REPORT EDIT HISTORY ==========
 model ReportChangeLog {
-    id               String   @id @default(cuid())
+    id               String                @id @default(cuid())
     reportId         String
+    userId           String?
     changedById      String
     editVersion      Int
     changes          Json
-    timestamp        DateTime @default(now())
-    conflictResolved Boolean  @default(false)
+    timestamp        DateTime              @default(now())
+    conflictResolved Boolean               @default(false)
+    action           ReportChangeLogAction @default(CREATED)
 
-    // Relations - FIXED: No ambiguous relations
-    changedBy TenantUser @relation("ReportChangedBy", fields: [changedById], references: [id])
+    // Relations
+    User      User?      @relation(fields: [userId], references: [id])
+    changedBy TenantUser @relation("ReportChangedByTenantUser", fields: [changedById], references: [id])
     report    Report     @relation(fields: [reportId], references: [id], onDelete: Cascade)
 
     // Indexes
@@ -907,7 +994,7 @@ model ReportChangeLog {
 }
 
 model ReportDetail {
-    id                    String   @id @default(cuid())
+    id                    String    @id @default(cuid())
     parameterName         String?
     parameterUnit         String?
     parameterReferenceMin Float?
@@ -915,18 +1002,21 @@ model ReportDetail {
     resultText            String?
     resultValue           Float?
     remarks               String?
-    createdAt             DateTime @default(now())
-    lastEditedAt          DateTime @default(now()) @updatedAt
-    changedBy             String?
+    amount                Float?
+    createdAt             DateTime  @default(now())
+    lastEditedAt          DateTime  @default(now()) @updatedAt
     deletedAt             DateTime?
 
     // Relations
-    reportId    String
-    parameterId String
-    report      Report          @relation(fields: [reportId], references: [id], onDelete: Cascade)
-    parameter   ReportParameter @relation(fields: [parameterId], references: [id], onDelete: Cascade)
-    serviceId   String?
-    Service     Service?        @relation(fields: [serviceId], references: [id])
+    reportId            String
+    parameterId         String
+    report              Report                @relation(fields: [reportId], references: [id], onDelete: Cascade)
+    parameter           ReportParameter       @relation(fields: [parameterId], references: [id], onDelete: Cascade)
+    serviceId           String?
+    Service             Service?              @relation(fields: [serviceId], references: [id])
+    reportTemplateId    String?
+    ReportTemplate      ReportTemplate?       @relation(fields: [reportTemplateId], references: [id])
+    DoctorCommissionLog DoctorCommissionLog[]
 
     // Indexes
     @@index([reportId])
