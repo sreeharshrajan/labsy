@@ -195,7 +195,7 @@ model Tenant {
     gstin            String?   @unique
     isActive         Boolean   @default(true)
     createdAt        DateTime  @default(now())
-    updatedAt        DateTime  @updatedAt
+    updatedAt        DateTime  @default(now()) @updatedAt
     deletedAt        DateTime?
 
     // RBAC Configuration
@@ -255,7 +255,7 @@ model User {
     status       UserStatus @default(ACTIVE)
     dateOfBirth  DateTime?
     createdAt    DateTime   @default(now())
-    updatedAt    DateTime   @updatedAt
+    updatedAt    DateTime   @default(now()) @updatedAt
     deletedAt    DateTime?
 
     // Relations
@@ -295,7 +295,7 @@ model TenantRole {
     description String?
     isSystem    Boolean  @default(false) // System roles cannot be modified
     createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
+    updatedAt   DateTime @default(now()) @updatedAt
 
     // Tenant-specific permissions
     permissions          TenantPermission[]
@@ -350,7 +350,7 @@ model TenantUserRole {
 model TenantUser {
     id        String    @id @default(cuid())
     createdAt DateTime  @default(now())
-    updatedAt DateTime  @updatedAt
+    updatedAt DateTime  @default(now()) @updatedAt
     deletedAt DateTime?
 
     // Tenant-specific roles
@@ -478,7 +478,7 @@ model SyncLog {
 model ServiceCategory {
     id        String    @id @default(cuid())
     createdAt DateTime  @default(now())
-    updatedAt DateTime  @updatedAt
+    updatedAt DateTime  @default(now()) @updatedAt
     deletedAt DateTime?
     name      String
     slug      String    @unique
@@ -502,7 +502,7 @@ model Service {
     price       Float
     isActive    Boolean   @default(true)
     createdAt   DateTime  @default(now())
-    updatedAt   DateTime  @updatedAt
+    updatedAt   DateTime  @default(now()) @updatedAt
     deletedAt   DateTime?
 
     // Relations
@@ -545,7 +545,7 @@ model Customer {
     medications       String[]
 
     createdAt DateTime  @default(now())
-    updatedAt DateTime  @updatedAt
+    updatedAt DateTime  @default(now()) @updatedAt
     deletedAt DateTime?
 
     // Relations
@@ -595,7 +595,7 @@ model Doctor {
 
     status    DoctorStatus @default(ACTIVE)
     createdAt DateTime     @default(now())
-    updatedAt DateTime     @updatedAt
+    updatedAt DateTime     @default(now()) @updatedAt
     deletedAt DateTime?
 
     // Relations
@@ -641,7 +641,7 @@ model DoctorCommission {
     isActive       Boolean   @default(true)
     notes          String?
     createdAt      DateTime  @default(now())
-    updatedAt      DateTime  @updatedAt
+    updatedAt      DateTime  @default(now()) @updatedAt
     deletedAt      DateTime?
 
     // Relations
@@ -662,7 +662,7 @@ model DoctorCommissionLog {
     invoiceId    String?
     commissionId String
     createdAt    DateTime @default(now())
-    updatedAt    DateTime @updatedAt
+    updatedAt    DateTime @default(now()) @updatedAt
 
     commission DoctorCommission @relation(fields: [commissionId], references: [id], onDelete: Cascade)
     doctor     Doctor           @relation(fields: [doctorId], references: [id], onDelete: Cascade)
@@ -686,7 +686,7 @@ model DoctorCommissionPayment {
     status        PaymentStatus @default(PENDING)
     notes         String?
     createdAt     DateTime      @default(now())
-    updatedAt     DateTime      @updatedAt
+    updatedAt     DateTime      @default(now()) @updatedAt
     deletedAt     DateTime?
 
     // Relations
@@ -713,7 +713,7 @@ model Invoice {
     status        InvoiceStatus @default(PAID)
     issuedAt      DateTime      @default(now())
     createdAt     DateTime      @default(now())
-    updatedAt     DateTime      @updatedAt
+    updatedAt     DateTime      @default(now()) @updatedAt
     deletedAt     DateTime?
     invoiceNumber String        @unique
 
@@ -748,7 +748,7 @@ model InvoiceItem {
     quantity  Int       @default(1)
     total     Float
     createdAt DateTime  @default(now())
-    updatedAt DateTime  @updatedAt
+    updatedAt DateTime  @default(now()) @updatedAt
     deletedAt DateTime?
 
     // Relations
@@ -767,7 +767,7 @@ model InvoiceItem {
 model ReportTemplate {
     id        String    @id @default(cuid())
     createdAt DateTime  @default(now())
-    updatedAt DateTime  @updatedAt
+    updatedAt DateTime  @default(now()) @updatedAt
     deletedAt DateTime?
     name      String
     notes     String?
@@ -806,7 +806,7 @@ model ReportParameter {
     ageMin         Int?
     ageMax         Int?
     createdAt      DateTime  @default(now())
-    updatedAt      DateTime  @updatedAt
+    updatedAt      DateTime  @default(now()) @updatedAt
     deletedAt      DateTime?
 
     // Relations
@@ -844,7 +844,7 @@ model Report {
     issuedAt       DateTime?
     collectedAt    DateTime?
     createdAt      DateTime      @default(now())
-    updatedAt      DateTime      @updatedAt
+    updatedAt      DateTime      @default(now()) @updatedAt
     deletedAt      DateTime?
     version        Int           @default(1)
 
@@ -916,7 +916,7 @@ model ReportDetail {
     resultValue           Float?
     remarks               String?
     createdAt             DateTime @default(now())
-    lastEditedAt          DateTime @updatedAt
+    lastEditedAt          DateTime @default(now()) @updatedAt
     changedBy             String?
     deletedAt             DateTime?
 
