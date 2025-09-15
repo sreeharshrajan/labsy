@@ -164,6 +164,94 @@ enum AuditLogAction {
 }
 
 // ========== SHARED MODELS ==========
+model AppConfig {
+    id             String   @id @default(cuid())
+    appName        String
+    appVersion     String
+    appLogo        String?
+    appIcon        String?
+    appBanner      String?
+    appDescription String?
+    appKeywords    String?
+    appAuthor      String?
+    appAuthorEmail String?
+    appAuthorUrl   String?
+    appCopyright   String?
+    createdAt      DateTime @default(now())
+    updatedAt      DateTime @default(now()) @updatedAt
+}
+
+model AppSetting {
+    id        String    @id @default(cuid())
+    key       String
+    value     String
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @default(now()) @updatedAt
+    deletedAt DateTime?
+
+    values AppSettingValue[]
+}
+
+model AppSettingValue {
+    id        String     @id @default(cuid())
+    settingId String
+    setting   AppSetting @relation(fields: [settingId], references: [id])
+    value     String
+    createdAt DateTime   @default(now())
+    updatedAt DateTime   @default(now()) @updatedAt
+    deletedAt DateTime?
+
+    @@index([settingId])
+}
+
+model Page {
+    id       String  @id @default(cuid())
+    name     String
+    slug     String  @unique
+    content  Json
+    isActive Boolean @default(true)
+    metaData Json?
+
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @default(now()) @updatedAt
+    deletedAt DateTime?
+
+    pageContents PageContent[]
+}
+
+model PageContent {
+    id      String @id @default(cuid())
+    section String // e.g., "hero", "features", "about", "testimonials", "cta"
+    content Json // JSON object storing section data (title, text, images, etc.)
+
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @default(now()) @updatedAt
+    deletedAt DateTime?
+
+    Page   Page?   @relation(fields: [pageId], references: [id])
+    pageId String?
+
+    @@index([section])
+}
+
+model Post {
+    id       String  @id @default(cuid())
+    title    String
+    slug     String  @unique
+    metaData Json?
+    content  Json
+    isActive Boolean @default(true)
+
+    User   User?   @relation(fields: [userId], references: [id])
+    userId String?
+
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @default(now()) @updatedAt
+    deletedAt DateTime?
+
+    @@index([slug])
+}
+
 model Notification {
     id        String    @id @default(cuid())
     tenantId  String
@@ -308,6 +396,7 @@ model User {
     userAddresses   UserAddress[]
     ReportChangeLog ReportChangeLog[]
     Notification    Notification[]
+    posts           Post[]
 
     // Indexes
     @@index([email])
