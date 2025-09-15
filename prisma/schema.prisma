@@ -1,4 +1,4 @@
-// This is your Prisma schema file,
+// This is Prisma schema file for MedLaby: https://medlaby.com
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
@@ -19,6 +19,7 @@ enum SubscriptionPlan {
     STARTER
     GROWTH
     ENTERPRISE
+    ONE_TIME
 }
 
 enum SubscriptionStatus {
@@ -30,10 +31,10 @@ enum SubscriptionStatus {
 
 // ========== LAB USER ROLES ==========
 enum Role {
-    OWNER // Full control of lab
-    ADMIN // Can manage users, reports, billing
-    STAFF // Regular staff (billing, reports, history)
-    VIEWER // Limited read-only access
+    OWNER
+    ADMIN
+    STAFF
+    VIEWER
 }
 
 enum UserTitle {
@@ -64,27 +65,181 @@ enum TenantStatus {
     DELETED
 }
 
-// ========== TENANT / LAB ==========
-model Tenant {
-    id           String    @id @default(cuid())
-    name         String
-    slug         String    @unique // used in URLs, e.g. lab1.booklims.com
-    contactEmail String
-    contactPhone String?
-    address      String?
-    city         String?
-    state        String?
-    zip          String?
-    country      String?
-    isActive     Boolean   @default(true)
-    createdAt    DateTime  @default(now())
-    updatedAt    DateTime  @updatedAt
-    deletedAt    DateTime?
+enum DoctorStatus {
+    ACTIVE
+    INACTIVE
+}
+
+enum BloodGroup {
+    A_POSITIVE
+    A_NEGATIVE
+    B_POSITIVE
+    B_NEGATIVE
+    AB_POSITIVE
+    AB_NEGATIVE
+    O_POSITIVE
+    O_NEGATIVE
+}
+
+enum CustomerType {
+    REFERRED
+    SELF
+    OTHER
+}
+
+enum MaritalStatus {
+    SINGLE
+    MARRIED
+    DIVORCED
+    WIDOWED
+    SEPARATED
+    OTHER
+}
+
+enum ReportStatus {
+    PENDING
+    PROCESSING
+    COMPLETED
+    DELIVERED
+}
+
+enum PaymentType {
+    CASH
+    UPI
+}
+
+enum PaymentMethod {
+    CASH
+    BANK_TRANSFER
+    UPI
+}
+
+enum PaymentStatus {
+    PENDING
+    PAID
+    FAILED
+}
+
+enum InvoiceStatus {
+    PAID
+    UNPAID
+    PARTIAL
+    CANCELLED
+}
+
+enum SyncOperation {
+    CREATE
+    UPDATE
+    DELETE
+}
+
+enum SyncStatus {
+    PENDING
+    SYNCED
+    FAILED
+}
+
+// ========== SHARED ADDRESS MODEL ==========
+model Address {
+    id        String   @id @default(cuid())
+    line1     String
+    line2     String?
+    city      String
+    state     String
+    zip       String
+    country   String   @default("India")
+    createdAt DateTime @default(now())
 
     // Relations
-    users         TenantUser[]
-    subscriptions Subscription[]
-    auditLogs     AuditLog[]
+    tenantAddresses   TenantAddress[]
+    userAddresses     UserAddress[]
+    customerAddresses CustomerAddress[]
+    doctorAddresses   DoctorAddress[]
+}
+
+// ========== SYSTEM ROLE TEMPLATES ==========
+model SystemRoleTemplate {
+    id          String  @id @default(cuid())
+    role        Role    @default(STAFF)
+    name        String  @unique
+    description String?
+    isDefault   Boolean @default(false)
+
+    // Default permissions for this role
+    tenantRoles TenantRole[]
+    permissions SystemPermission[]
+
+    @@index([isDefault])
+}
+
+model SystemPermission {
+    id         String @id @default(cuid())
+    action     String
+    resource   String
+    conditions Json?
+
+    roleTemplateId String
+    roleTemplate   SystemRoleTemplate @relation(fields: [roleTemplateId], references: [id], onDelete: Cascade)
+
+    @@unique([roleTemplateId, action, resource])
+}
+
+// ========== TENANT / LAB ==========
+model Tenant {
+    id               String    @id @default(cuid())
+    name             String
+    slug             String    @unique
+    labLicenseNumber String?   @unique
+    contactEmail     String    @unique
+    contactPhone     String?   @unique
+    gstin            String?   @unique
+    isActive         Boolean   @default(true)
+    createdAt        DateTime  @default(now())
+    updatedAt        DateTime  @updatedAt
+    deletedAt        DateTime?
+
+    // RBAC Configuration
+    canManageRoles Boolean @default(true)
+    maxCustomRoles Int     @default(3)
+    maxUsers       Int     @default(5)
+
+    // Relations
+    users           TenantUser[]
+    subscriptions   Subscription[]
+    auditLogs       AuditLog[]
+    ServiceCategory ServiceCategory[]
+    Service         Service[]
+    Customer        Customer[]
+    Doctor          Doctor[]
+    Invoice         Invoice[]
+    Report          Report[]
+    ReportTemplate  ReportTemplate[]
+    tenantAddresses TenantAddress[]
+    SyncLog         SyncLog[]
+    roles           TenantRole[] // Tenant-specific roles
+
+    // Indexes
+    @@index([slug])
+    @@index([isActive])
+    @@index([createdAt])
+    @@index([deletedAt])
+}
+
+// Junction table for Tenant-Address relationship
+model TenantAddress {
+    id        String   @id @default(cuid())
+    tenantId  String
+    addressId String
+    isPrimary Boolean  @default(true)
+    createdAt DateTime @default(now())
+
+    tenant  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+    address Address  @relation(fields: [addressId], references: [id], onDelete: Cascade)
+    Report  Report[]
+
+    @@unique([tenantId, addressId])
+    @@index([tenantId])
+    @@index([addressId])
 }
 
 // ========== USERS ==========
@@ -94,39 +249,127 @@ model User {
     name         String?
     email        String?    @unique
     image        String?
-    passwordHash String? // optional if you use email/password login
-    isSuperAdmin Boolean    @default(false) // SaaS-level owner/admin
+    passwordHash String?
+    phone        String?
+    isSuperAdmin Boolean    @default(false)
     status       UserStatus @default(ACTIVE)
     dateOfBirth  DateTime?
-    phone        String?
-    address      String?
-    city         String?
-    state        String?
-    zip          String?
-    country      String?
     createdAt    DateTime   @default(now())
     updatedAt    DateTime   @updatedAt
     deletedAt    DateTime?
 
     // Relations
-    tenants   TenantUser[]
-    sessions  Session[]
-    accounts  Account[]
-    auditLogs AuditLog[]
+    tenants       TenantUser[]
+    sessions      Session[]
+    accounts      Account[]
+    auditLogs     AuditLog[]
+    userAddresses UserAddress[]
+
+    // Indexes
+    @@index([email])
+    @@index([status])
+    @@index([createdAt])
+    @@index([deletedAt])
+}
+
+// Junction table for User-Address relationship
+model UserAddress {
+    id        String   @id @default(cuid())
+    userId    String
+    addressId String
+    isPrimary Boolean  @default(true)
+    createdAt DateTime @default(now())
+
+    user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+    address Address @relation(fields: [addressId], references: [id], onDelete: Cascade)
+
+    @@unique([userId, addressId])
+    @@index([userId])
+    @@index([addressId])
+}
+
+// ========== TENANT ROLES ==========
+model TenantRole {
+    id          String   @id @default(cuid())
+    name        String // e.g., "LAB_TECH", "REPORT_VIEWER"
+    description String?
+    isSystem    Boolean  @default(false) // System roles cannot be modified
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    // Tenant-specific permissions
+    permissions          TenantPermission[]
+    systemRoleTemplateId String?
+    systemRoleTemplate   SystemRoleTemplate? @relation(fields: [systemRoleTemplateId], references: [id], onDelete: Cascade)
+
+    // Relations
+    tenantId       String
+    tenant         Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+    TenantUserRole TenantUserRole[]
+
+    // Indexes
+    @@unique([tenantId, name])
+    @@index([tenantId])
+    @@index([isSystem])
+}
+
+// ========== TENANT PERMISSIONS ==========
+model TenantPermission {
+    id       String @id @default(cuid())
+    action   String // e.g., "report:read", "invoice:create"
+    resource String // e.g., "Report", "Invoice", "Customer"
+
+    // Relations
+    roleId String
+    role   TenantRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+    // Indexes
+    @@unique([roleId, action, resource])
+    @@index([action])
+    @@index([resource])
+}
+
+// ========== TENANT USER ROLES ==========
+model TenantUserRole {
+    id        String   @id @default(cuid())
+    createdAt DateTime @default(now())
+
+    // Relations
+    tenantUserId String
+    roleId       String
+    tenantUser   TenantUser @relation(fields: [tenantUserId], references: [id], onDelete: Cascade)
+    role         TenantRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+    // Indexes
+    @@unique([tenantUserId, roleId])
+    @@index([tenantUserId])
+    @@index([roleId])
 }
 
 // ========== TENANT USERS ==========
 model TenantUser {
     id        String    @id @default(cuid())
-    role      Role      @default(STAFF)
     createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
     deletedAt DateTime?
 
+    // Tenant-specific roles
+    tenantRoles TenantUserRole[]
+
     // Relations
-    userId   String
-    tenantId String
-    user     User   @relation(fields: [userId], references: [id])
-    tenant   Tenant @relation(fields: [tenantId], references: [id])
+    userId        String
+    tenantId      String
+    user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+    tenant        Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+    Report        Report[]          @relation("ReportCreatedBy")
+    reportUpdates ReportChangeLog[] @relation("ReportChangedBy")
+    collectedBy   Report[]          @relation("SampleCollectedBy")
+
+    // Indexes
+    @@unique([userId, tenantId])
+    @@index([userId])
+    @@index([tenantId])
+    @@index([createdAt])
 }
 
 // ========== SUBSCRIPTION / BILLING ==========
@@ -137,60 +380,558 @@ model Subscription {
     startDate   DateTime           @default(now())
     endDate     DateTime?
     renewalDate DateTime?
-    stripeId    String? // or Razorpay/PayU etc
     createdAt   DateTime           @default(now())
+    stripeId    String?
 
     // Relations
     tenantId String
-    tenant   Tenant @relation(fields: [tenantId], references: [id])
+    tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+    // Indexes
+    @@index([tenantId])
+    @@index([status])
+    @@index([startDate])
+    @@index([plan, status])
 }
 
 // ========== AUDIT LOG ==========
 model AuditLog {
     id        String   @id @default(cuid())
-    action    String // e.g., "USER_CREATED", "BILLING_UPDATED"
+    action    String
     metadata  Json?
     createdAt DateTime @default(now())
 
     // Relations
     tenantId String
     userId   String?
-    tenant   Tenant  @relation(fields: [tenantId], references: [id])
-    user     User?   @relation(fields: [userId], references: [id])
+    tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+    user     User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    // Indexes
+    @@index([tenantId])
+    @@index([action])
+    @@index([createdAt])
+    @@index([tenantId, action])
+    @@index([tenantId, createdAt])
 }
 
 // ========== NEXTAUTH MODELS ==========
 model Account {
     id                       String  @id @default(cuid())
     userId                   String
+    expires_at               Int?
+    refresh_token_expires_in Int?
     type                     String
     provider                 String
     providerAccountId        String
-    refresh_token            String? // @db.Text
-    access_token             String? // @db.Text
-    expires_at               Int?
+    refresh_token            String?
+    access_token             String?
     token_type               String?
     scope                    String?
-    id_token                 String? // @db.Text
+    id_token                 String?
     session_state            String?
     user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-    refresh_token_expires_in Int?
 
     @@unique([provider, providerAccountId])
+    @@index([userId])
 }
 
 model Session {
     id           String   @id @default(cuid())
-    sessionToken String   @unique
     userId       String
     expires      DateTime
+    sessionToken String   @unique
     user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
+    @@index([expires])
 }
 
 model VerificationToken {
     identifier String
-    token      String   @unique
     expires    DateTime
+    token      String   @unique
 
     @@unique([identifier, token])
+    @@index([expires])
+}
+
+model SyncLog {
+    id        String        @id @default(cuid())
+    tenantId  String
+    entity    String
+    entityId  String
+    changes   Json
+    status    SyncStatus    @default(PENDING)
+    operation SyncOperation @default(UPDATE)
+    syncedAt  DateTime      @default(now())
+
+    tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+    @@index([tenantId])
+    @@index([entity])
+    @@index([syncedAt])
+    @@index([tenantId, entity])
+}
+
+// ========== SERVICES MANAGEMENT ==========
+model ServiceCategory {
+    id        String    @id @default(cuid())
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+    name      String
+    slug      String    @unique
+
+    // Relations
+    tenantId String
+    tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+    services Service[]
+
+    // Indexes
+    @@index([tenantId])
+    @@index([slug])
+    @@index([deletedAt])
+}
+
+model Service {
+    id          String    @id @default(cuid())
+    name        String
+    code        String?   @unique
+    description String?
+    price       Float
+    isActive    Boolean   @default(true)
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+    deletedAt   DateTime?
+
+    // Relations
+    tenantId       String
+    categoryId     String?
+    tenant         Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+    category       ServiceCategory? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+    InvoiceItem    InvoiceItem[]
+    ReportDetail   ReportDetail[]
+    ReportTemplate ReportTemplate[]
+
+    // Indexes
+    @@index([tenantId])
+    @@index([categoryId])
+    @@index([code])
+    @@index([isActive])
+    @@index([price])
+}
+
+// ========== CUSTOMER MANAGEMENT ==========
+model Customer {
+    id            String         @id @default(cuid())
+    title         UserTitle?     @default(MR)
+    name          String
+    email         String?
+    phone         String?
+    dateOfBirth   DateTime?
+    gender        Gender?
+    bloodGroup    BloodGroup?
+    maritalStatus MaritalStatus?
+
+    // Identification
+    aadharNumber   String? @unique
+    panNumber      String? @unique
+    passportNumber String? @unique
+
+    // Medical Information
+    knownAllergies    String[]
+    chronicConditions String[]
+    medications       String[]
+
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+
+    // Relations
+    tenantId          String
+    tenant            Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+    Invoice           Invoice[]
+    Report            Report[]
+    customerAddresses CustomerAddress[]
+
+    // Indexes
+    @@index([tenantId])
+    @@index([email])
+    @@index([phone])
+    @@index([name])
+    @@index([deletedAt])
+}
+
+// Junction table for Customer-Address relationship
+model CustomerAddress {
+    id         String   @id @default(cuid())
+    customerId String
+    addressId  String
+    isPrimary  Boolean  @default(true)
+    createdAt  DateTime @default(now())
+
+    customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+    address  Address  @relation(fields: [addressId], references: [id], onDelete: Cascade)
+    Report   Report[]
+
+    @@unique([customerId, addressId])
+    @@index([customerId])
+    @@index([addressId])
+}
+
+// ========== DOCTOR MANAGEMENT ==========
+model Doctor {
+    id             String  @id @default(cuid())
+    name           String
+    specialization String?
+    email          String?
+    phone          String?
+    registrationNo String?
+
+    // Practice Information
+    clinicName String?
+    department String?
+
+    status    DoctorStatus @default(ACTIVE)
+    createdAt DateTime     @default(now())
+    updatedAt DateTime     @updatedAt
+    deletedAt DateTime?
+
+    // Relations
+    tenantId            String
+    tenant              Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+    Invoice             Invoice[]
+    Report              Report[]
+    doctorAddresses     DoctorAddress[]
+    doctorCommissions   DoctorCommission[]
+    doctorPayments      DoctorCommissionPayment[]
+    DoctorCommissionLog DoctorCommissionLog[]
+
+    // Indexes
+    @@index([tenantId])
+    @@index([email])
+    @@index([phone])
+    @@index([registrationNo])
+    @@index([specialization])
+}
+
+// Junction table for Doctor-Address relationship
+model DoctorAddress {
+    id        String    @id @default(cuid())
+    doctorId  String
+    addressId String
+    isPrimary Boolean   @default(true)
+    createdAt DateTime  @default(now())
+    deletedAt DateTime?
+
+    doctor  Doctor  @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+    address Address @relation(fields: [addressId], references: [id], onDelete: Cascade)
+
+    @@unique([doctorId, addressId])
+    @@index([doctorId])
+    @@index([addressId])
+}
+
+// Doctor commission structure
+model DoctorCommission {
+    id             String    @id @default(cuid())
+    commissionType String // PERCENTAGE, FIXED
+    value          Float
+    isActive       Boolean   @default(true)
+    notes          String?
+    createdAt      DateTime  @default(now())
+    updatedAt      DateTime  @updatedAt
+    deletedAt      DateTime?
+
+    // Relations
+    doctorId            String
+    doctor              Doctor                @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+    DoctorCommissionLog DoctorCommissionLog[]
+
+    // Indexes
+    @@index([doctorId])
+    @@index([isActive])
+    @@index([commissionType])
+    @@index([value])
+}
+
+model DoctorCommissionLog {
+    id           String   @id @default(cuid())
+    doctorId     String
+    invoiceId    String?
+    commissionId String
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
+
+    commission DoctorCommission @relation(fields: [commissionId], references: [id], onDelete: Cascade)
+    doctor     Doctor           @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+    invoice    Invoice?         @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+    // Indexes
+    @@index([doctorId])
+    @@index([invoiceId])
+    @@index([commissionId])
+    @@index([createdAt])
+    @@index([updatedAt])
+}
+
+// Commission payment tracking
+model DoctorCommissionPayment {
+    id            String        @id @default(cuid())
+    amount        Float
+    paymentDate   DateTime      @default(now())
+    paymentMethod PaymentMethod
+    referenceNo   String?
+    status        PaymentStatus @default(PENDING)
+    notes         String?
+    createdAt     DateTime      @default(now())
+    updatedAt     DateTime      @updatedAt
+    deletedAt     DateTime?
+
+    // Relations
+    doctorId String
+    doctor   Doctor @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+    // Indexes
+    @@index([doctorId])
+    @@index([paymentDate])
+    @@index([status])
+    @@index([referenceNo])
+    @@index([createdAt])
+    @@index([updatedAt])
+    @@index([deletedAt])
+}
+
+// ========== BILLING ==========
+model Invoice {
+    id            String        @id @default(cuid())
+    totalAmount   Float
+    discount      Float         @default(0)
+    netAmount     Float
+    paymentType   PaymentType
+    status        InvoiceStatus @default(PAID)
+    issuedAt      DateTime      @default(now())
+    createdAt     DateTime      @default(now())
+    updatedAt     DateTime      @updatedAt
+    deletedAt     DateTime?
+    invoiceNumber String        @unique
+
+    // Relations
+    tenantId            String
+    customerId          String
+    doctorId            String?
+    tenant              Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+    customer            Customer              @relation(fields: [customerId], references: [id], onDelete: Cascade)
+    doctor              Doctor?               @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+    items               InvoiceItem[]
+    Report              Report[]
+    doctorCommissionLog DoctorCommissionLog[]
+
+    // Indexes
+    @@index([tenantId])
+    @@index([customerId])
+    @@index([status])
+    @@index([createdAt])
+    @@index([updatedAt])
+    @@index([deletedAt])
+    @@index([issuedAt])
+    @@index([tenantId, status])
+    @@index([tenantId, createdAt])
+    @@index([customerId, status])
+    @@index([invoiceNumber])
+}
+
+model InvoiceItem {
+    id        String    @id @default(cuid())
+    price     Float
+    quantity  Int       @default(1)
+    total     Float
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+
+    // Relations
+    invoiceId String
+    serviceId String
+    invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+    service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+    // Indexes
+    @@index([invoiceId])
+    @@index([serviceId])
+    @@index([createdAt])
+}
+
+// ========== REPORT TEMPLATE MANAGEMENT ==========
+model ReportTemplate {
+    id        String    @id @default(cuid())
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+    name      String
+    notes     String?
+    isActive  Boolean   @default(true)
+
+    // Relations
+    tenantId   String
+    serviceId  String?
+    tenant     Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+    service    Service?          @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+    parameters ReportParameter[]
+
+    // Indexes
+    @@index([tenantId])
+    @@index([serviceId])
+    @@index([name])
+    @@index([deletedAt])
+    @@index([isActive])
+}
+
+model ReportParameter {
+    id             String    @id @default(cuid())
+    name           String
+    unit           String?
+    method         String?
+    turnaroundTime Int?
+    isCritical     Boolean   @default(false)
+    criticalLow    Float?
+    criticalHigh   Float?
+    genderSpecific Boolean   @default(false)
+    ageSpecific    Boolean   @default(false)
+    notes          String?
+    referenceMin   Float?
+    referenceMax   Float?
+    gender         Gender?
+    ageMin         Int?
+    ageMax         Int?
+    createdAt      DateTime  @default(now())
+    updatedAt      DateTime  @updatedAt
+    deletedAt      DateTime?
+
+    // Relations
+    templateId String
+    template   ReportTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+    details    ReportDetail[]
+
+    // Indexes
+    @@index([templateId])
+    @@index([name])
+    @@index([isCritical])
+    @@index([deletedAt])
+    @@index([gender])
+    @@index([ageMin])
+    @@index([ageMax])
+    @@index([referenceMin])
+    @@index([referenceMax])
+    @@index([genderSpecific])
+    @@index([ageSpecific])
+    @@index([method])
+    @@index([turnaroundTime])
+    @@index([unit])
+    @@index([notes])
+}
+
+// ========== REPORTS ==========
+model Report {
+    id             String        @id @default(cuid())
+    reportCode     String?       @unique
+    fileUrl        String?
+    collectedPlace String? // If not using customer's address or lab address
+    notes          String?
+    status         ReportStatus  @default(PENDING)
+    customerType   CustomerType?
+    issuedAt       DateTime?
+    collectedAt    DateTime?
+    createdAt      DateTime      @default(now())
+    updatedAt      DateTime      @updatedAt
+    deletedAt      DateTime?
+    version        Int           @default(1)
+
+    // Relations
+    tenantId          String
+    customerId        String
+    doctorId          String?
+    invoiceId         String
+    createdBy         String?
+    collectedBy       String?
+    customerAddressId String? // If using customer's address 
+    labAddressId      String? // If using lab address
+
+    tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+    customer  Customer          @relation(fields: [customerId], references: [id], onDelete: Cascade)
+    doctor    Doctor?           @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+    invoice   Invoice           @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+    details   ReportDetail[]
+    updateLog ReportChangeLog[]
+
+    // Relations to staff users via TenantUser
+    createdByUser   TenantUser?      @relation("ReportCreatedBy", fields: [createdBy], references: [id])
+    collectedByUser TenantUser?      @relation("SampleCollectedBy", fields: [collectedBy], references: [id])
+    customerAddress CustomerAddress? @relation(fields: [customerAddressId], references: [id])
+    labAddress      TenantAddress?   @relation(fields: [labAddressId], references: [id])
+
+    // Indexes
+    @@index([tenantId, status])
+    @@index([customerId])
+    @@index([createdAt])
+    @@index([reportCode])
+    @@index([invoiceId])
+    @@index([deletedAt])
+    @@index([updatedAt])
+    @@index([createdBy])
+    @@index([collectedBy])
+    @@index([customerAddressId])
+    @@index([labAddressId])
+}
+
+// ========== REPORT EDIT HISTORY ==========
+model ReportChangeLog {
+    id               String   @id @default(cuid())
+    reportId         String
+    changedById      String
+    editVersion      Int
+    changes          Json
+    timestamp        DateTime @default(now())
+    conflictResolved Boolean  @default(false)
+
+    // Relations - FIXED: No ambiguous relations
+    changedBy TenantUser @relation("ReportChangedBy", fields: [changedById], references: [id])
+    report    Report     @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+    // Indexes
+    @@index([reportId, editVersion])
+    @@index([timestamp])
+    @@index([changedById])
+    @@index([reportId])
+}
+
+model ReportDetail {
+    id                    String   @id @default(cuid())
+    parameterName         String?
+    parameterUnit         String?
+    parameterReferenceMin Float?
+    parameterReferenceMax Float?
+    resultText            String?
+    resultValue           Float?
+    remarks               String?
+    createdAt             DateTime @default(now())
+    lastEditedAt          DateTime @updatedAt
+    changedBy             String?
+    deletedAt             DateTime?
+
+    // Relations
+    reportId    String
+    parameterId String
+    report      Report          @relation(fields: [reportId], references: [id], onDelete: Cascade)
+    parameter   ReportParameter @relation(fields: [parameterId], references: [id], onDelete: Cascade)
+    serviceId   String?
+    Service     Service?        @relation(fields: [serviceId], references: [id])
+
+    // Indexes
+    @@index([reportId])
+    @@index([lastEditedAt])
+    @@index([parameterId])
+    @@index([resultValue])
+    @@index([deletedAt])
 }
