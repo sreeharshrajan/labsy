@@ -45,12 +45,35 @@ export const authConfig = {
   ],
   adapter: PrismaAdapter(db),
   callbacks: {
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-      },
-    }),
+    session: async ({ session, user }) => {
+      // Get user's tenant information
+      const tenantUser = await db.tenantUser.findFirst({
+        where: { userId: user.id },
+        include: {
+          tenant: true,
+          tenantRoles: {
+            include: {
+              role: {
+                include: {
+                  permissions: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: user.id,
+          tenantId: tenantUser?.tenantId || null,
+          tenant: tenantUser?.tenant || null,
+          isSuperAdmin: user.isSuperAdmin || false,
+          roles: tenantUser?.tenantRoles?.map(tr => tr.role) || [],
+        },
+      };
+    },
   },
 } satisfies NextAuthConfig;

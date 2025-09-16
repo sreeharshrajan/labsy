@@ -1,0 +1,25 @@
+import { z } from 'zod';
+export const ReportInvoiceFindFirstResultSchema = z.nullable(z.object({
+  id: z.string(),
+  totalAmount: z.number(),
+  discount: z.number(),
+  netAmount: z.number(),
+  paymentType: z.unknown(),
+  status: z.unknown(),
+  issuedAt: z.date(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  deletedAt: z.date().optional(),
+  tenantId: z.string(),
+  customerId: z.string(),
+  doctorId: z.string().optional(),
+  tenant: z.unknown(),
+  customer: z.unknown(),
+  doctor: z.unknown().optional(),
+  items: z.array(z.unknown()),
+  payments: z.array(z.unknown()),
+  logs: z.array(z.unknown()),
+  Report: z.array(z.unknown()),
+  Service: z.unknown().optional(),
+  serviceId: z.string().optional()
+}));

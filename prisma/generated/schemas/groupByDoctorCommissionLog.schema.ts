@@ -1,0 +1,15 @@
+import type { Prisma } from '@prisma/client';
+import { z } from 'zod';
+import { DoctorCommissionLogWhereInputObjectSchema } from './objects/DoctorCommissionLogWhereInput.schema';
+import { DoctorCommissionLogOrderByWithAggregationInputObjectSchema } from './objects/DoctorCommissionLogOrderByWithAggregationInput.schema';
+import { DoctorCommissionLogScalarWhereWithAggregatesInputObjectSchema } from './objects/DoctorCommissionLogScalarWhereWithAggregatesInput.schema';
+import { DoctorCommissionLogScalarFieldEnumSchema } from './enums/DoctorCommissionLogScalarFieldEnum.schema';
+import { DoctorCommissionLogCountAggregateInputObjectSchema } from './objects/DoctorCommissionLogCountAggregateInput.schema';
+import { DoctorCommissionLogMinAggregateInputObjectSchema } from './objects/DoctorCommissionLogMinAggregateInput.schema';
+import { DoctorCommissionLogMaxAggregateInputObjectSchema } from './objects/DoctorCommissionLogMaxAggregateInput.schema';
+import { DoctorCommissionLogAvgAggregateInputObjectSchema } from './objects/DoctorCommissionLogAvgAggregateInput.schema';
+import { DoctorCommissionLogSumAggregateInputObjectSchema } from './objects/DoctorCommissionLogSumAggregateInput.schema';
+
+export const DoctorCommissionLogGroupBySchema: z.ZodType<Prisma.DoctorCommissionLogGroupByArgs> = z.object({ where: DoctorCommissionLogWhereInputObjectSchema.optional(), orderBy: z.union([DoctorCommissionLogOrderByWithAggregationInputObjectSchema, DoctorCommissionLogOrderByWithAggregationInputObjectSchema.array()]).optional(), having: DoctorCommissionLogScalarWhereWithAggregatesInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), by: z.array(DoctorCommissionLogScalarFieldEnumSchema), _count: z.union([ z.literal(true), DoctorCommissionLogCountAggregateInputObjectSchema ]).optional(), _min: DoctorCommissionLogMinAggregateInputObjectSchema.optional(), _max: DoctorCommissionLogMaxAggregateInputObjectSchema.optional(), _avg: DoctorCommissionLogAvgAggregateInputObjectSchema.optional(), _sum: DoctorCommissionLogSumAggregateInputObjectSchema.optional() }).strict() as unknown as z.ZodType<Prisma.DoctorCommissionLogGroupByArgs>;
+
+export const DoctorCommissionLogGroupByZodSchema = z.object({ where: DoctorCommissionLogWhereInputObjectSchema.optional(), orderBy: z.union([DoctorCommissionLogOrderByWithAggregationInputObjectSchema, DoctorCommissionLogOrderByWithAggregationInputObjectSchema.array()]).optional(), having: DoctorCommissionLogScalarWhereWithAggregatesInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), by: z.array(DoctorCommissionLogScalarFieldEnumSchema), _count: z.union([ z.literal(true), DoctorCommissionLogCountAggregateInputObjectSchema ]).optional(), _min: DoctorCommissionLogMinAggregateInputObjectSchema.optional(), _max: DoctorCommissionLogMaxAggregateInputObjectSchema.optional(), _avg: DoctorCommissionLogAvgAggregateInputObjectSchema.optional(), _sum: DoctorCommissionLogSumAggregateInputObjectSchema.optional() }).strict();

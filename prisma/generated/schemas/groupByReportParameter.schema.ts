@@ -1,0 +1,15 @@
+import type { Prisma } from '@prisma/client';
+import { z } from 'zod';
+import { ReportParameterWhereInputObjectSchema } from './objects/ReportParameterWhereInput.schema';
+import { ReportParameterOrderByWithAggregationInputObjectSchema } from './objects/ReportParameterOrderByWithAggregationInput.schema';
+import { ReportParameterScalarWhereWithAggregatesInputObjectSchema } from './objects/ReportParameterScalarWhereWithAggregatesInput.schema';
+import { ReportParameterScalarFieldEnumSchema } from './enums/ReportParameterScalarFieldEnum.schema';
+import { ReportParameterCountAggregateInputObjectSchema } from './objects/ReportParameterCountAggregateInput.schema';
+import { ReportParameterMinAggregateInputObjectSchema } from './objects/ReportParameterMinAggregateInput.schema';
+import { ReportParameterMaxAggregateInputObjectSchema } from './objects/ReportParameterMaxAggregateInput.schema';
+import { ReportParameterAvgAggregateInputObjectSchema } from './objects/ReportParameterAvgAggregateInput.schema';
+import { ReportParameterSumAggregateInputObjectSchema } from './objects/ReportParameterSumAggregateInput.schema';
+
+export const ReportParameterGroupBySchema: z.ZodType<Prisma.ReportParameterGroupByArgs> = z.object({ where: ReportParameterWhereInputObjectSchema.optional(), orderBy: z.union([ReportParameterOrderByWithAggregationInputObjectSchema, ReportParameterOrderByWithAggregationInputObjectSchema.array()]).optional(), having: ReportParameterScalarWhereWithAggregatesInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), by: z.array(ReportParameterScalarFieldEnumSchema), _count: z.union([ z.literal(true), ReportParameterCountAggregateInputObjectSchema ]).optional(), _min: ReportParameterMinAggregateInputObjectSchema.optional(), _max: ReportParameterMaxAggregateInputObjectSchema.optional(), _avg: ReportParameterAvgAggregateInputObjectSchema.optional(), _sum: ReportParameterSumAggregateInputObjectSchema.optional() }).strict() as unknown as z.ZodType<Prisma.ReportParameterGroupByArgs>;
+
+export const ReportParameterGroupByZodSchema = z.object({ where: ReportParameterWhereInputObjectSchema.optional(), orderBy: z.union([ReportParameterOrderByWithAggregationInputObjectSchema, ReportParameterOrderByWithAggregationInputObjectSchema.array()]).optional(), having: ReportParameterScalarWhereWithAggregatesInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), by: z.array(ReportParameterScalarFieldEnumSchema), _count: z.union([ z.literal(true), ReportParameterCountAggregateInputObjectSchema ]).optional(), _min: ReportParameterMinAggregateInputObjectSchema.optional(), _max: ReportParameterMaxAggregateInputObjectSchema.optional(), _avg: ReportParameterAvgAggregateInputObjectSchema.optional(), _sum: ReportParameterSumAggregateInputObjectSchema.optional() }).strict();

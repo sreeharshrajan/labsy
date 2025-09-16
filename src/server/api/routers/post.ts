@@ -5,6 +5,7 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "@/server/api/trpc";
+import { withRLSContext, extractRLSContextFromSession } from "@/server/rls";
 
 export const postRouter = createTRPCRouter({
   hello: publicProcedure
@@ -18,21 +19,37 @@ export const postRouter = createTRPCRouter({
   create: protectedProcedure
     .input(z.object({ name: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
-      return ctx.db.post.create({
-        data: {
-          name: input.name,
-          createdById: ctx.session.user.id,
-        },
+      const rlsContext = extractRLSContextFromSession(ctx.session);
+      if (!rlsContext) {
+        throw new Error("Invalid session context");
+      }
+
+      return withRLSContext(rlsContext, async () => {
+        return ctx.db.post.create({
+          data: {
+            title: input.name,
+            slug: input.name.toLowerCase().replace(/\s+/g, '-'),
+            content: {},
+            userId: ctx.session.user.id,
+          },
+        });
       });
     }),
 
   getLatest: protectedProcedure.query(async ({ ctx }) => {
-    const post = await ctx.db.post.findFirst({
-      orderBy: { createdAt: "desc" },
-      where: { createdById: ctx.session.user.id },
-    });
+    const rlsContext = extractRLSContextFromSession(ctx.session);
+    if (!rlsContext) {
+      throw new Error("Invalid session context");
+    }
 
-    return post ?? null;
+    return withRLSContext(rlsContext, async () => {
+      const post = await ctx.db.post.findFirst({
+        orderBy: { createdAt: "desc" },
+        where: { userId: ctx.session.user.id },
+      });
+
+      return post ?? null;
+    });
   }),
 
   getSecretMessage: protectedProcedure.query(() => {
