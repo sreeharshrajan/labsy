@@ -1,0 +1,14 @@
+import type { Prisma } from '@prisma/client';
+import { z } from 'zod';
+import { DoctorCommissionPaymentOrderByWithRelationInputObjectSchema } from './objects/DoctorCommissionPaymentOrderByWithRelationInput.schema';
+import { DoctorCommissionPaymentWhereInputObjectSchema } from './objects/DoctorCommissionPaymentWhereInput.schema';
+import { DoctorCommissionPaymentWhereUniqueInputObjectSchema } from './objects/DoctorCommissionPaymentWhereUniqueInput.schema';
+import { DoctorCommissionPaymentCountAggregateInputObjectSchema } from './objects/DoctorCommissionPaymentCountAggregateInput.schema';
+import { DoctorCommissionPaymentMinAggregateInputObjectSchema } from './objects/DoctorCommissionPaymentMinAggregateInput.schema';
+import { DoctorCommissionPaymentMaxAggregateInputObjectSchema } from './objects/DoctorCommissionPaymentMaxAggregateInput.schema';
+import { DoctorCommissionPaymentAvgAggregateInputObjectSchema } from './objects/DoctorCommissionPaymentAvgAggregateInput.schema';
+import { DoctorCommissionPaymentSumAggregateInputObjectSchema } from './objects/DoctorCommissionPaymentSumAggregateInput.schema';
+
+export const DoctorCommissionPaymentAggregateSchema: z.ZodType<Prisma.DoctorCommissionPaymentAggregateArgs> = z.object({ orderBy: z.union([DoctorCommissionPaymentOrderByWithRelationInputObjectSchema, DoctorCommissionPaymentOrderByWithRelationInputObjectSchema.array()]).optional(), where: DoctorCommissionPaymentWhereInputObjectSchema.optional(), cursor: DoctorCommissionPaymentWhereUniqueInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), _count: z.union([ z.literal(true), DoctorCommissionPaymentCountAggregateInputObjectSchema ]).optional(), _min: DoctorCommissionPaymentMinAggregateInputObjectSchema.optional(), _max: DoctorCommissionPaymentMaxAggregateInputObjectSchema.optional(), _avg: DoctorCommissionPaymentAvgAggregateInputObjectSchema.optional(), _sum: DoctorCommissionPaymentSumAggregateInputObjectSchema.optional() }).strict() as unknown as z.ZodType<Prisma.DoctorCommissionPaymentAggregateArgs>;
+
+export const DoctorCommissionPaymentAggregateZodSchema = z.object({ orderBy: z.union([DoctorCommissionPaymentOrderByWithRelationInputObjectSchema, DoctorCommissionPaymentOrderByWithRelationInputObjectSchema.array()]).optional(), where: DoctorCommissionPaymentWhereInputObjectSchema.optional(), cursor: DoctorCommissionPaymentWhereUniqueInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), _count: z.union([ z.literal(true), DoctorCommissionPaymentCountAggregateInputObjectSchema ]).optional(), _min: DoctorCommissionPaymentMinAggregateInputObjectSchema.optional(), _max: DoctorCommissionPaymentMaxAggregateInputObjectSchema.optional(), _avg: DoctorCommissionPaymentAvgAggregateInputObjectSchema.optional(), _sum: DoctorCommissionPaymentSumAggregateInputObjectSchema.optional() }).strict();

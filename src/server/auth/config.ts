@@ -1,6 +1,6 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
-import DiscordProvider from "next-auth/providers/discord";
+import GoogleProvider from "next-auth/providers/google";
 
 import { db } from "@/server/db";
 
@@ -32,11 +32,11 @@ declare module "next-auth" {
  */
 export const authConfig = {
   providers: [
-    DiscordProvider,
+    GoogleProvider,
     /**
      * ...add more providers here.
      *
-     * Most other providers require a bit more work than the Discord provider. For example, the
+     * Most other providers require a bit more work than the Google provider. For example, the
      * GitHub provider requires you to add the `refresh_token_expires_in` field to the Account
      * model. Refer to the NextAuth.js docs for the provider you want to use. Example:
      *
@@ -45,12 +45,35 @@ export const authConfig = {
   ],
   adapter: PrismaAdapter(db),
   callbacks: {
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-      },
-    }),
+    session: async ({ session, user }) => {
+      // Get user's tenant information
+      const tenantUser = await db.tenantUser.findFirst({
+        where: { userId: user.id },
+        include: {
+          tenant: true,
+          tenantRoles: {
+            include: {
+              role: {
+                include: {
+                  permissions: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: user.id,
+          tenantId: tenantUser?.tenantId || null,
+          tenant: tenantUser?.tenant || null,
+          isSuperAdmin: user.isSuperAdmin || false,
+          roles: tenantUser?.tenantRoles?.map(tr => tr.role) || [],
+        },
+      };
+    },
   },
 } satisfies NextAuthConfig;

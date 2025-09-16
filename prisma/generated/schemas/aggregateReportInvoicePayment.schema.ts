@@ -1,0 +1,14 @@
+import type { Prisma } from '@prisma/client';
+import { z } from 'zod';
+import { ReportInvoicePaymentOrderByWithRelationInputObjectSchema } from './objects/ReportInvoicePaymentOrderByWithRelationInput.schema';
+import { ReportInvoicePaymentWhereInputObjectSchema } from './objects/ReportInvoicePaymentWhereInput.schema';
+import { ReportInvoicePaymentWhereUniqueInputObjectSchema } from './objects/ReportInvoicePaymentWhereUniqueInput.schema';
+import { ReportInvoicePaymentCountAggregateInputObjectSchema } from './objects/ReportInvoicePaymentCountAggregateInput.schema';
+import { ReportInvoicePaymentMinAggregateInputObjectSchema } from './objects/ReportInvoicePaymentMinAggregateInput.schema';
+import { ReportInvoicePaymentMaxAggregateInputObjectSchema } from './objects/ReportInvoicePaymentMaxAggregateInput.schema';
+import { ReportInvoicePaymentAvgAggregateInputObjectSchema } from './objects/ReportInvoicePaymentAvgAggregateInput.schema';
+import { ReportInvoicePaymentSumAggregateInputObjectSchema } from './objects/ReportInvoicePaymentSumAggregateInput.schema';
+
+export const ReportInvoicePaymentAggregateSchema: z.ZodType<Prisma.ReportInvoicePaymentAggregateArgs> = z.object({ orderBy: z.union([ReportInvoicePaymentOrderByWithRelationInputObjectSchema, ReportInvoicePaymentOrderByWithRelationInputObjectSchema.array()]).optional(), where: ReportInvoicePaymentWhereInputObjectSchema.optional(), cursor: ReportInvoicePaymentWhereUniqueInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), _count: z.union([ z.literal(true), ReportInvoicePaymentCountAggregateInputObjectSchema ]).optional(), _min: ReportInvoicePaymentMinAggregateInputObjectSchema.optional(), _max: ReportInvoicePaymentMaxAggregateInputObjectSchema.optional(), _avg: ReportInvoicePaymentAvgAggregateInputObjectSchema.optional(), _sum: ReportInvoicePaymentSumAggregateInputObjectSchema.optional() }).strict() as unknown as z.ZodType<Prisma.ReportInvoicePaymentAggregateArgs>;
+
+export const ReportInvoicePaymentAggregateZodSchema = z.object({ orderBy: z.union([ReportInvoicePaymentOrderByWithRelationInputObjectSchema, ReportInvoicePaymentOrderByWithRelationInputObjectSchema.array()]).optional(), where: ReportInvoicePaymentWhereInputObjectSchema.optional(), cursor: ReportInvoicePaymentWhereUniqueInputObjectSchema.optional(), take: z.number().optional(), skip: z.number().optional(), _count: z.union([ z.literal(true), ReportInvoicePaymentCountAggregateInputObjectSchema ]).optional(), _min: ReportInvoicePaymentMinAggregateInputObjectSchema.optional(), _max: ReportInvoicePaymentMaxAggregateInputObjectSchema.optional(), _avg: ReportInvoicePaymentAvgAggregateInputObjectSchema.optional(), _sum: ReportInvoicePaymentSumAggregateInputObjectSchema.optional() }).strict();
