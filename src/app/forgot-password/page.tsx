@@ -2,14 +2,12 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,13 +27,13 @@ export default function ForgotPasswordPage() {
       const data = await response.json();
 
       if (response.ok) {
-        setMessage(data.message);
+        setMessage(data?.message as string);
         setEmail('');
       } else {
-        setError(data.error || 'Something went wrong');
+        setError(data.error as string || 'Something went wrong');
       }
     } catch (error) {
-      setError('Network error. Please try again.');
+      setError(error as string || 'Network error. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -49,7 +47,7 @@ export default function ForgotPasswordPage() {
             Forgot your password?
           </h2>
           <p className="mt-2 text-center text-sm text-gray-300">
-            Enter your email address and we'll send you a link to reset your password.
+            Enter your email address and we&apos;ll send you a link to reset your password.
           </p>
         </div>
 

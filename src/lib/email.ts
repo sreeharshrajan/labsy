@@ -32,7 +32,8 @@ export async function sendEmail({ to, subject, html, text }: EmailOptions) {
   if (!transporter) {
     console.log('SMTP not configured. Email would be sent to:', to);
     console.log('Subject:', subject);
-    console.log('Reset link:', html.match(/https?:\/\/[^\s"']+/)?.[0] || 'No link found');
+    const linkMatch = /https?:\/\/[^\s"']+/.exec(html);
+    console.log('Reset link:', linkMatch?.[0] || 'No link found');
     return { success: true, messageId: 'dev-mode', message: 'SMTP not configured - email logged to console' };
   }
 
