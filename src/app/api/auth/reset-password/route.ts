@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/server/db';
 import bcrypt from 'bcryptjs';
@@ -10,7 +11,7 @@ const resetPasswordSchema = z.object({
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one uppercase letter, one lowercase letter, and one number'),
 });
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const body = await request.json();
     const { token, password } = resetPasswordSchema.parse(body);
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: error.errors[0]?.message || 'Invalid input' },
+        { error: error.errors[0]?.message ?? 'Invalid input' },
         { status: 400 }
       );
     }

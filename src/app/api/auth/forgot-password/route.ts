@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/server/db';
 import crypto from 'crypto';
@@ -8,7 +9,7 @@ const forgotPasswordSchema = z.object({
   email: z.string().email('Invalid email address'),
 });
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const body = await request.json();
     const { email } = forgotPasswordSchema.parse(body);
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Always return success to prevent email enumeration
-    if (!user || !user.passwordHash) {
+    if (!user?.passwordHash) {
       return NextResponse.json(
         { message: 'If an account with that email exists, we have sent a password reset link.' },
         { status: 200 }

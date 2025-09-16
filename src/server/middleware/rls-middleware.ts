@@ -12,8 +12,8 @@ import { setRLSContext, clearRLSContext, extractRLSContextFromSession } from "@/
 
 export async function withRLSMiddleware(
   handler: (req: NextRequest, context?: any) => Promise<NextResponse>
-) {
-  return async (req: NextRequest, context?: any) => {
+): Promise<(req: NextRequest, context?: any) => Promise<NextResponse>> {
+  return async (req: NextRequest, context?: any): Promise<NextResponse> => {
     try {
       // Get the session
       const session = await auth();
@@ -54,8 +54,8 @@ export async function withRLSMiddleware(
  */
 export async function withAuthenticatedRLSMiddleware(
   handler: (req: NextRequest, context?: any) => Promise<NextResponse>
-) {
-  return async (req: NextRequest, context?: any) => {
+): Promise<(req: NextRequest, context?: any) => Promise<NextResponse>> {
+  return async (req: NextRequest, context?: any): Promise<NextResponse> => {
     try {
       // Get the session
       const session = await auth();
@@ -104,7 +104,7 @@ export async function withAuthenticatedRLSMiddleware(
  * Middleware specifically for tRPC procedures
  * This can be used as a tRPC middleware
  */
-export const rlsTRPCMiddleware = async (opts: any) => {
+export const rlsTRPCMiddleware = async (opts: any): Promise<any> => {
   const { ctx, next } = opts;
 
   try {

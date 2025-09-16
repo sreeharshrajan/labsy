@@ -44,8 +44,8 @@ interface ExtendedJWT extends JWT {
 export const authConfig = {
   providers: [
     GoogleProvider({
-      clientId: process.env.AUTH_GOOGLE_ID!,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET!,
+      clientId: process.env.AUTH_GOOGLE_ID ?? '',
+      clientSecret: process.env.AUTH_GOOGLE_SECRET ?? '',
     }),
     CredentialsProvider({
       name: "credentials",
@@ -55,7 +55,7 @@ export const authConfig = {
         rememberMe: { label: "Remember Me", type: "checkbox" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
+        if (!credentials.email || !credentials.password) {
           return null;
         }
 
@@ -124,23 +124,22 @@ export const authConfig = {
       // If this is the initial sign in, add user data to token
       if (user?.id) {
         (token as ExtendedJWT).userId = user.id;
-        (token as ExtendedJWT).isSuperAdmin = (user as any).isSuperAdmin ?? false;
-        (token as ExtendedJWT).tenantId = (user as any).tenantId ?? null;
-        (token as ExtendedJWT).tenant = (user as any).tenant ?? null;
-        (token as ExtendedJWT).roles = (user as any).roles ?? [];
+        const userWithExtras = user as any;
+        (token as ExtendedJWT).isSuperAdmin = userWithExtras.isSuperAdmin ?? false;
+        (token as ExtendedJWT).tenantId = userWithExtras.tenantId ?? null;
+        (token as ExtendedJWT).tenant = userWithExtras.tenant ?? null;
+        (token as ExtendedJWT).roles = userWithExtras.roles ?? [];
       }
       return token as ExtendedJWT;
     },
     async session({ session, token }) {
       // Add user data to session
-      if (token) {
-        const extendedToken = token as ExtendedJWT;
-        session.user.id = extendedToken.userId;
-        session.user.isSuperAdmin = extendedToken.isSuperAdmin;
-        session.user.tenantId = extendedToken.tenantId;
-        session.user.tenant = extendedToken.tenant;
-        session.user.roles = extendedToken.roles;
-      }
+      const extendedToken = token as ExtendedJWT;
+      session.user.id = extendedToken.userId;
+      session.user.isSuperAdmin = extendedToken.isSuperAdmin;
+      session.user.tenantId = extendedToken.tenantId;
+      session.user.tenant = extendedToken.tenant;
+      session.user.roles = extendedToken.roles;
       return session;
     },
   },
