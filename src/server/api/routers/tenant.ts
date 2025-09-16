@@ -133,8 +133,8 @@ export const tenantRouter = createTRPCRouter({
                     create: address,
                   },
                 },
-              }),
-            },
+              },
+            }),
           },
           include: {
             customerAddresses: {
