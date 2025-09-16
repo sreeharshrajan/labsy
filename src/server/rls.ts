@@ -21,11 +21,11 @@ export async function setRLSContext(context: RLSAuthContext): Promise<void> {
   await db.$executeRaw`
     SELECT set_config('app.current_user_id', ${context.userId}, true);
   `;
-  
+
   await db.$executeRaw`
     SELECT set_config('app.current_tenant_id', ${context.tenantId}, true);
   `;
-  
+
   await db.$executeRaw`
     SELECT set_config('app.is_super_admin', ${context.isSuperAdmin.toString()}, true);
   `;
@@ -39,11 +39,11 @@ export async function clearRLSContext(): Promise<void> {
   await db.$executeRaw`
     SELECT set_config('app.current_user_id', '', true);
   `;
-  
+
   await db.$executeRaw`
     SELECT set_config('app.current_tenant_id', '', true);
   `;
-  
+
   await db.$executeRaw`
     SELECT set_config('app.is_super_admin', 'false', true);
   `;
@@ -102,12 +102,12 @@ export async function getCurrentRLSContext(): Promise<{
       current_setting('app.current_tenant_id', true) as current_tenant_id,
       COALESCE(current_setting('app.is_super_admin', true)::boolean, false) as is_super_admin;
   `;
-  
+
   const context = result[0];
   return {
-    userId: context?.current_user_id || null,
-    tenantId: context?.current_tenant_id || null,
-    isSuperAdmin: context?.is_super_admin || false,
+    userId: context?.current_user_id ?? null,
+    tenantId: context?.current_tenant_id ?? null,
+    isSuperAdmin: context?.is_super_admin ?? false,
   };
 }
 
@@ -117,11 +117,11 @@ export async function getCurrentRLSContext(): Promise<{
  */
 export async function validateRLSContext(): Promise<void> {
   const context = await getCurrentRLSContext();
-  
+
   if (!context.userId) {
     throw new Error("RLS context missing: userId not set");
   }
-  
+
   if (!context.tenantId && !context.isSuperAdmin) {
     throw new Error("RLS context missing: tenantId not set and user is not super admin");
   }
@@ -135,18 +135,18 @@ export function extractRLSContextFromSession(session: any): RLSAuthContext | nul
   if (!session?.user?.id) {
     return null;
   }
-  
+
   const tenantId = session.user.tenantId;
-  const isSuperAdmin = session.user.isSuperAdmin || false;
-  
+  const isSuperAdmin = session.user.isSuperAdmin ?? false;
+
   // Super admins don't need a tenant ID, but regular users do
   if (!tenantId && !isSuperAdmin) {
     return null;
   }
-  
+
   return {
     userId: session.user.id,
-    tenantId: tenantId || '', // Empty string for super admins
+    tenantId: tenantId ?? '', // Empty string for super admins
     isSuperAdmin,
   };
 }

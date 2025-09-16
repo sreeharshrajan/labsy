@@ -5,11 +5,6 @@ generator client {
     provider        = "prisma-client-js"
     previewFeatures = ["postgresqlExtensions"]
 }
-
-generator zod {
-    provider = "prisma-zod-generator"
-}
-
 datasource db {
     provider = "postgresql"
     // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below

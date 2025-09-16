@@ -68,10 +68,10 @@ export const authConfig = {
         user: {
           ...session.user,
           id: user.id,
-          tenantId: tenantUser?.tenantId || null,
-          tenant: tenantUser?.tenant || null,
-          isSuperAdmin: user.isSuperAdmin || false,
-          roles: tenantUser?.tenantRoles?.map(tr => tr.role) || [],
+          tenantId: tenantUser?.tenantId ?? null,
+          tenant: tenantUser?.tenant ?? null,
+          isSuperAdmin: (user as any).isSuperAdmin === true,
+          roles: tenantUser?.tenantRoles?.map(tr => tr.role) ?? [],
         },
       };
     },

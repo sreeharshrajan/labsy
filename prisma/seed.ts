@@ -4,11 +4,15 @@ import { users } from "./seeders/index.js";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 Starting seed...");
+  console.log("🌱 Starting database seed...");
+  // 0. Clear old data
+  console.log('🧹 Clearing old data...');
+  await prisma.user.deleteMany();
+  console.log('✅ Cleared old data!');
 
   await (users as (prisma: PrismaClient) => Promise<void>)(prisma);
 
-  console.log("✅ Seed completed successfully!");
+  console.log("✅ Database seeded successfully!");
 }
 
 main()

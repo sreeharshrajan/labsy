@@ -1,9 +1,0 @@
-import { z } from 'zod';
-import type { Prisma } from '@prisma/client';
-import { TenantArgsObjectSchema } from './TenantArgs.schema'
-
-const makeSchema = () => z.object({
-  tenant: z.union([z.boolean(), z.lazy(() => TenantArgsObjectSchema)]).optional()
-}).strict();
-export const SubscriptionIncludeObjectSchema: z.ZodType<Prisma.SubscriptionInclude> = makeSchema() as unknown as z.ZodType<Prisma.SubscriptionInclude>;
-export const SubscriptionIncludeObjectZodSchema = makeSchema();

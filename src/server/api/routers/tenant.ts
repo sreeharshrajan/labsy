@@ -301,7 +301,7 @@ export const tenantRouter = createTRPCRouter({
         pendingReports,
         completedReports,
         totalInvoices,
-        totalRevenue: totalRevenue._sum.netAmount || 0,
+        totalRevenue: totalRevenue._sum.netAmount ?? 0,
       };
     });
   }),

@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authConfig } from "@/server/auth/config";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { auth } from "@/server/auth";
 import { setRLSContext, clearRLSContext, extractRLSContextFromSession } from "@/server/rls";
 
 /**
@@ -16,7 +16,7 @@ export async function withRLSMiddleware(
   return async (req: NextRequest, context?: any) => {
     try {
       // Get the session
-      const session = await getServerSession(authConfig);
+      const session = await auth();
 
       if (session) {
         // Extract RLS context from session
@@ -58,7 +58,7 @@ export async function withAuthenticatedRLSMiddleware(
   return async (req: NextRequest, context?: any) => {
     try {
       // Get the session
-      const session = await getServerSession(authConfig);
+      const session = await auth();
 
       if (!session) {
         return NextResponse.json(
