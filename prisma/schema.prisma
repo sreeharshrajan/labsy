@@ -5,6 +5,7 @@ generator client {
     provider        = "prisma-client-js"
     previewFeatures = ["postgresqlExtensions"]
 }
+
 datasource db {
     provider = "postgresql"
     // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below
@@ -374,19 +375,21 @@ model TenantAddress {
 
 // ========== USERS ==========
 model User {
-    id           String     @id @default(cuid())
-    userTitle    UserTitle  @default(MR)
-    name         String?
-    email        String     @unique
-    image        String?
-    passwordHash String?
-    phone        String?
-    isSuperAdmin Boolean    @default(false)
-    status       UserStatus @default(ACTIVE)
-    dateOfBirth  DateTime?
-    createdAt    DateTime   @default(now())
-    updatedAt    DateTime   @default(now()) @updatedAt
-    deletedAt    DateTime?
+    id                   String     @id @default(cuid())
+    userTitle            UserTitle  @default(MR)
+    name                 String?
+    email                String     @unique
+    image                String?
+    passwordHash         String?
+    phone                String?
+    isSuperAdmin         Boolean    @default(false)
+    status               UserStatus @default(ACTIVE)
+    dateOfBirth          DateTime?
+    passwordResetToken   String?    @unique
+    passwordResetExpires DateTime?
+    createdAt            DateTime   @default(now())
+    updatedAt            DateTime   @default(now()) @updatedAt
+    deletedAt            DateTime?
 
     // Relations
     tenants         TenantUser[]

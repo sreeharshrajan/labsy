@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { users } from "./seeders/index.js";
+import { users } from "./seeders/index";
 
 const prisma = new PrismaClient();
 
