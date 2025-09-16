@@ -1,4 +1,3 @@
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
 import { type JWT } from "next-auth/jwt";
 import GoogleProvider from "next-auth/providers/google";
@@ -107,8 +106,8 @@ export const authConfig = {
             name: user.name,
             image: user.image,
             isSuperAdmin: user.isSuperAdmin,
-            tenantId: user.tenants[0]?.tenantId,
-            tenant: user.tenants[0]?.tenant,
+            tenantId: user.tenants[0]?.tenantId ?? null,
+            tenant: user.tenants[0]?.tenant ?? null,
             roles: user.tenants[0]?.tenantRoles?.map(tr => tr.role) ?? [],
           };
         } catch (error) {
@@ -118,7 +117,6 @@ export const authConfig = {
       },
     }),
   ],
-  adapter: PrismaAdapter(db),
   callbacks: {
     async jwt({ token, user }): Promise<ExtendedJWT> {
       // If this is the initial sign in, add user data to token

@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/server/db';
 import crypto from 'crypto';
-import { sendPasswordResetEmail } from '@/lib/email';
+import { sendPasswordResetEmail } from '@/lib/services/email';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Invalid email address'),

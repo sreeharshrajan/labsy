@@ -1,18 +1,19 @@
 import nodemailer from 'nodemailer';
+import { env } from '@/lib/env';
 
 // SMTP configuration
 let transporter: nodemailer.Transporter | null = null;
 
 // Initialize transporter only if SMTP is configured
-if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+if (env.SMTP_USER && env.SMTP_PASS) {
   try {
     transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+      host: env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(env.SMTP_PORT || '587'),
+      secure: env.SMTP_SECURE === 'true', // true for 465, false for other ports
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        user: env.SMTP_USER,
+        pass: env.SMTP_PASS,
       },
     });
   } catch (error) {
@@ -39,7 +40,7 @@ export async function sendEmail({ to, subject, html, text }: EmailOptions) {
 
   try {
     const mailOptions = {
-      from: `"MedLaby" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+      from: `"MedLaby" <${env.SMTP_FROM || env.SMTP_USER}>`,
       to,
       subject,
       html,
@@ -56,7 +57,7 @@ export async function sendEmail({ to, subject, html, text }: EmailOptions) {
 }
 
 export async function sendPasswordResetEmail(email: string, resetToken: string) {
-  const resetUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+  const resetUrl = `${env.NEXTAUTH_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
 
   const html = `
     <!DOCTYPE html>
