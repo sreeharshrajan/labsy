@@ -111,7 +111,7 @@ export const rlsTRPCMiddleware = async (opts: any) => {
     // Get session from context (assuming it's available)
     const session = ctx.session;
 
-    if (session) {
+    if (session?.user) {
       const rlsContext = extractRLSContextFromSession(session);
 
       if (rlsContext) {
