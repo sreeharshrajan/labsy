@@ -183,72 +183,65 @@ model AppConfig {
 }
 
 model AppSetting {
-    id        String    @id @default(cuid())
+    id        String            @id @default(cuid())
     key       String
     value     String
-    createdAt DateTime  @default(now())
-    updatedAt DateTime  @default(now()) @updatedAt
+    createdAt DateTime          @default(now())
+    updatedAt DateTime          @default(now()) @updatedAt
     deletedAt DateTime?
-
-    values AppSettingValue[]
+    values    AppSettingValue[]
 }
 
 model AppSettingValue {
     id        String     @id @default(cuid())
     settingId String
-    setting   AppSetting @relation(fields: [settingId], references: [id])
     value     String
     createdAt DateTime   @default(now())
     updatedAt DateTime   @default(now()) @updatedAt
     deletedAt DateTime?
+    setting   AppSetting @relation(fields: [settingId], references: [id])
 
     @@index([settingId])
 }
 
 model Page {
-    id       String  @id @default(cuid())
-    name     String
-    slug     String  @unique
-    content  Json
-    isActive Boolean @default(true)
-    metaData Json?
-
-    createdAt DateTime  @default(now())
-    updatedAt DateTime  @default(now()) @updatedAt
-    deletedAt DateTime?
-
+    id           String        @id @default(cuid())
+    name         String
+    slug         String        @unique
+    content      Json
+    isActive     Boolean       @default(true)
+    metaData     Json?
+    createdAt    DateTime      @default(now())
+    updatedAt    DateTime      @default(now()) @updatedAt
+    deletedAt    DateTime?
     pageContents PageContent[]
 }
 
 model PageContent {
-    id      String @id @default(cuid())
-    section String // e.g., "hero", "features", "about", "testimonials", "cta"
-    content Json // JSON object storing section data (title, text, images, etc.)
-
+    id        String    @id @default(cuid())
+    section   String
+    content   Json
     createdAt DateTime  @default(now())
     updatedAt DateTime  @default(now()) @updatedAt
     deletedAt DateTime?
-
-    Page   Page?   @relation(fields: [pageId], references: [id])
-    pageId String?
+    pageId    String?
+    Page      Page?     @relation(fields: [pageId], references: [id])
 
     @@index([section])
 }
 
 model Post {
-    id       String  @id @default(cuid())
-    title    String
-    slug     String  @unique
-    metaData Json?
-    content  Json
-    isActive Boolean @default(true)
-
-    User   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId String
-
+    id        String    @id @default(cuid())
+    title     String
+    slug      String    @unique
+    metaData  Json?
+    content   Json
+    isActive  Boolean   @default(true)
+    userId    String
     createdAt DateTime  @default(now())
     updatedAt DateTime  @default(now()) @updatedAt
     deletedAt DateTime?
+    User      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     @@index([slug])
 }
@@ -256,57 +249,52 @@ model Post {
 model Notification {
     id        String    @id @default(cuid())
     tenantId  String
-    tenant    Tenant    @relation(fields: [tenantId], references: [id])
     userId    String?
-    user      User?     @relation(fields: [userId], references: [id])
-    type      String // info, alert, reminder, system
+    type      String
     title     String
     message   String
     isRead    Boolean   @default(false)
     metadata  Json?
     createdAt DateTime  @default(now())
     readAt    DateTime?
+    tenant    Tenant    @relation(fields: [tenantId], references: [id])
+    user      User?     @relation(fields: [userId], references: [id])
 }
 
 // ========== SHARED ADDRESS MODEL ==========
 model Address {
-    id        String   @id @default(cuid())
-    line1     String
-    line2     String?
-    city      String
-    state     String
-    zip       String
-    country   String   @default("India")
-    createdAt DateTime @default(now())
-
-    // Relations
-    tenantAddresses   TenantAddress[]
-    userAddresses     UserAddress[]
+    id                String            @id @default(cuid())
+    line1             String
+    line2             String?
+    city              String
+    state             String
+    zip               String
+    country           String            @default("India")
+    createdAt         DateTime          @default(now())
     customerAddresses CustomerAddress[]
     doctorAddresses   DoctorAddress[]
+    tenantAddresses   TenantAddress[]
+    userAddresses     UserAddress[]
 }
 
 // ========== SYSTEM ROLE TEMPLATES ==========
 model SystemRoleTemplate {
-    id          String  @id @default(cuid())
-    role        Role    @default(STAFF)
-    name        String  @unique
+    id          String             @id @default(cuid())
+    role        Role               @default(STAFF)
+    name        String             @unique
     description String?
-    isDefault   Boolean @default(false)
-
-    // Default permissions for this role
-    tenantRoles TenantRole[]
+    isDefault   Boolean            @default(false)
     permissions SystemPermission[]
+    tenantRoles TenantRole[]
 
     @@index([isDefault])
 }
 
 model SystemPermission {
-    id         String @id @default(cuid())
-    action     String
-    resource   String
-    conditions Json?
-
+    id             String             @id @default(cuid())
+    action         String
+    resource       String
+    conditions     Json?
     roleTemplateId String
     roleTemplate   SystemRoleTemplate @relation(fields: [roleTemplateId], references: [id], onDelete: Cascade)
 
@@ -315,58 +303,51 @@ model SystemPermission {
 
 // ========== TENANT / LAB ==========
 model Tenant {
-    id               String    @id @default(cuid())
-    name             String
-    slug             String    @unique
-    labLicenseNumber String?   @unique
-    contactEmail     String    @unique
-    contactPhone     String?   @unique
-    gstin            String?   @unique
-    isActive         Boolean   @default(true)
-    createdAt        DateTime  @default(now())
-    updatedAt        DateTime  @default(now()) @updatedAt
-    deletedAt        DateTime?
-
-    // RBAC Configuration
-    canManageRoles Boolean @default(true)
-    maxCustomRoles Int     @default(3)
-    maxUsers       Int     @default(5)
-
-    // Relations
-    users                TenantUser[]
-    subscriptions        Subscription[]
+    id                   String                 @id @default(cuid())
+    name                 String
+    slug                 String                 @unique
+    labLicenseNumber     String?                @unique
+    contactEmail         String                 @unique
+    contactPhone         String?                @unique
+    gstin                String?                @unique
+    isActive             Boolean                @default(true)
+    createdAt            DateTime               @default(now())
+    updatedAt            DateTime               @default(now()) @updatedAt
+    deletedAt            DateTime?
+    canManageRoles       Boolean                @default(true)
+    maxCustomRoles       Int                    @default(3)
+    maxUsers             Int                    @default(5)
     auditLogs            AuditLog[]
-    ServiceCategory      ServiceCategory[]
-    Service              Service[]
     Customer             Customer[]
     Doctor               Doctor[]
-    ReportInvoice        ReportInvoice[]
-    Report               Report[]
-    ReportTemplate       ReportTemplate[]
-    tenantAddresses      TenantAddress[]
-    SyncLog              SyncLog[]
-    Roles                TenantRole[] // Tenant-specific roles
-    ReportInvoicePayment ReportInvoicePayment[]
     Notification         Notification[]
+    Report               Report[]
+    ReportInvoice        ReportInvoice[]
+    ReportInvoicePayment ReportInvoicePayment[]
+    ReportTemplate       ReportTemplate[]
+    Service              Service[]
+    ServiceCategory      ServiceCategory[]
+    subscriptions        Subscription[]
+    SyncLog              SyncLog[]
+    tenantAddresses      TenantAddress[]
+    Roles                TenantRole[]
+    users                TenantUser[]
 
-    // Indexes
     @@index([slug])
     @@index([isActive])
     @@index([createdAt])
     @@index([deletedAt])
 }
 
-// Junction table for Tenant-Address relationship
 model TenantAddress {
     id        String   @id @default(cuid())
     tenantId  String
     addressId String
     isPrimary Boolean  @default(true)
     createdAt DateTime @default(now())
-
-    tenant  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-    address Address  @relation(fields: [addressId], references: [id], onDelete: Cascade)
-    Report  Report[]
+    Report    Report[]
+    address   Address  @relation(fields: [addressId], references: [id], onDelete: Cascade)
+    tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
     @@unique([tenantId, addressId])
     @@index([tenantId])
@@ -375,133 +356,108 @@ model TenantAddress {
 
 // ========== USERS ==========
 model User {
-    id                   String     @id @default(cuid())
-    userTitle            UserTitle  @default(MR)
+    id                   String            @id @default(cuid())
     name                 String?
-    email                String     @unique
+    email                String            @unique
     image                String?
+    createdAt            DateTime          @default(now())
+    dateOfBirth          DateTime?
+    deletedAt            DateTime?
+    isSuperAdmin         Boolean           @default(false)
     passwordHash         String?
     phone                String?
-    isSuperAdmin         Boolean    @default(false)
-    status               UserStatus @default(ACTIVE)
-    dateOfBirth          DateTime?
-    passwordResetToken   String?    @unique
+    status               UserStatus        @default(ACTIVE)
+    updatedAt            DateTime          @default(now()) @updatedAt
+    userTitle            UserTitle         @default(MR)
     passwordResetExpires DateTime?
-    createdAt            DateTime   @default(now())
-    updatedAt            DateTime   @default(now()) @updatedAt
-    deletedAt            DateTime?
+    passwordResetToken   String?           @unique
+    accounts             Account[]
+    auditLogs            AuditLog[]
+    Notification         Notification[]
+    posts                Post[]
+    ReportChangeLog      ReportChangeLog[]
+    sessions             Session[]
+    tenants              TenantUser[]
+    userAddresses        UserAddress[]
 
-    // Relations
-    tenants         TenantUser[]
-    sessions        Session[]
-    accounts        Account[]
-    auditLogs       AuditLog[]
-    userAddresses   UserAddress[]
-    ReportChangeLog ReportChangeLog[]
-    Notification    Notification[]
-    posts           Post[]
-
-    // Indexes
     @@index([email])
     @@index([status])
     @@index([createdAt])
     @@index([deletedAt])
 }
 
-// Junction table for User-Address relationship
 model UserAddress {
     id        String   @id @default(cuid())
     userId    String
     addressId String
     isPrimary Boolean  @default(true)
     createdAt DateTime @default(now())
-
-    user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-    address Address @relation(fields: [addressId], references: [id], onDelete: Cascade)
+    address   Address  @relation(fields: [addressId], references: [id], onDelete: Cascade)
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     @@unique([userId, addressId])
     @@index([userId])
     @@index([addressId])
 }
 
-// ========== TENANT ROLES ==========
 model TenantRole {
-    id          String   @id @default(cuid())
-    name        String // e.g., "LAB_TECH", "REPORT_VIEWER"
-    description String?
-    isSystem    Boolean  @default(false) // System roles cannot be modified
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @default(now()) @updatedAt
-
-    // Tenant-specific permissions
-    permissions          TenantPermission[]
+    id                   String              @id @default(cuid())
+    name                 String
+    description          String?
+    isSystem             Boolean             @default(false)
+    createdAt            DateTime            @default(now())
+    updatedAt            DateTime            @default(now()) @updatedAt
     systemRoleTemplateId String?
+    tenantId             String
+    permissions          TenantPermission[]
     systemRoleTemplate   SystemRoleTemplate? @relation(fields: [systemRoleTemplateId], references: [id], onDelete: Cascade)
+    tenant               Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+    TenantUserRole       TenantUserRole[]
 
-    // Relations
-    tenantId       String
-    tenant         Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-    TenantUserRole TenantUserRole[]
-
-    // Indexes
     @@unique([tenantId, name])
     @@index([tenantId])
     @@index([isSystem])
 }
 
-// ========== TENANT PERMISSIONS ==========
 model TenantPermission {
-    id       String @id @default(cuid())
-    action   String // e.g., "report:read", "invoice:create"
-    resource String // e.g., "Report", "Invoice", "Customer"
+    id       String     @id @default(cuid())
+    action   String
+    resource String
+    roleId   String
+    role     TenantRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
-    // Relations
-    roleId String
-    role   TenantRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
-
-    // Indexes
     @@unique([roleId, action, resource])
     @@index([action])
     @@index([resource])
 }
 
-// ========== TENANT USER ROLES ==========
 model TenantUserRole {
-    id        String   @id @default(cuid())
-    createdAt DateTime @default(now())
-
-    // Relations
+    id           String     @id @default(cuid())
+    createdAt    DateTime   @default(now())
     tenantUserId String
     roleId       String
-    tenantUser   TenantUser @relation(fields: [tenantUserId], references: [id], onDelete: Cascade)
     role         TenantRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+    tenantUser   TenantUser @relation(fields: [tenantUserId], references: [id], onDelete: Cascade)
 
-    // Indexes
     @@unique([tenantUserId, roleId])
     @@index([tenantUserId])
     @@index([roleId])
 }
 
-// ========== TENANT USERS ==========
 model TenantUser {
-    id        String    @id @default(cuid())
-    createdAt DateTime  @default(now())
-    updatedAt DateTime  @default(now()) @updatedAt
-    deletedAt DateTime?
-
-    // Tenant-specific roles
-    tenantRoles TenantUserRole[]
-
-    // Relations
+    id            String            @id @default(cuid())
+    createdAt     DateTime          @default(now())
+    updatedAt     DateTime          @default(now()) @updatedAt
+    deletedAt     DateTime?
     userId        String
     tenantId      String
-    user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-    tenant        Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+    collectedBy   Report[]          @relation("SampleCollectedBy")
     Report        Report[]          @relation("ReportCreatedBy")
     reportUpdates ReportChangeLog[] @relation("ReportChangedByTenantUser")
-    collectedBy   Report[]          @relation("SampleCollectedBy")
+    tenant        Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+    user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+    tenantRoles   TenantUserRole[]
 
-    // Indexes
     @@unique([userId, tenantId])
     @@index([userId])
     @@index([tenantId])
@@ -518,12 +474,9 @@ model Subscription {
     renewalDate DateTime?
     createdAt   DateTime           @default(now())
     stripeId    String?
+    tenantId    String
+    tenant      Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-    // Relations
-    tenantId String
-    tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-    // Indexes
     @@index([tenantId])
     @@index([status])
     @@index([startDate])
@@ -533,21 +486,18 @@ model Subscription {
 // ========== AUDIT LOG ==========
 model AuditLog {
     id        String         @id @default(cuid())
-    action    AuditLogAction @default(CREATED)
     metadata  Json?
-    entity    String? // e.g., Report, Invoice, Payment
+    createdAt DateTime       @default(now())
+    tenantId  String
+    userId    String?
+    entity    String?
     entityId  String?
     ipAddress String?
     userAgent String?
-    createdAt DateTime       @default(now())
+    action    AuditLogAction @default(CREATED)
+    tenant    Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+    user      User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    // Relations
-    tenantId String
-    userId   String?
-    tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-    user     User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-    // Indexes
     @@index([tenantId])
     @@index([action])
     @@index([createdAt])
@@ -559,17 +509,17 @@ model AuditLog {
 model Account {
     id                       String  @id @default(cuid())
     userId                   String
-    expires_at               Int?
-    refresh_token_expires_in Int?
     type                     String
     provider                 String
     providerAccountId        String
     refresh_token            String?
     access_token             String?
+    expires_at               Int?
     token_type               String?
     scope                    String?
     id_token                 String?
     session_state            String?
+    refresh_token_expires_in Int?
     user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     @@unique([provider, providerAccountId])
@@ -578,9 +528,9 @@ model Account {
 
 model Session {
     id           String   @id @default(cuid())
+    sessionToken String   @unique
     userId       String
     expires      DateTime
-    sessionToken String   @unique
     user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     @@index([userId])
@@ -589,8 +539,8 @@ model Session {
 
 model VerificationToken {
     identifier String
-    expires    DateTime
     token      String   @unique
+    expires    DateTime
 
     @@unique([identifier, token])
     @@index([expires])
@@ -601,13 +551,12 @@ model SyncLog {
     tenantId  String
     entity    String
     entityId  String
-    details   Json?
     status    SyncStatus    @default(PENDING)
     operation SyncOperation @default(UPDATE)
     syncedAt  DateTime      @default(now())
+    details   Json?
     startedAt DateTime      @default(now())
-
-    tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+    tenant    Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
     @@index([tenantId])
     @@index([entity])
@@ -623,40 +572,34 @@ model ServiceCategory {
     deletedAt DateTime?
     name      String
     slug      String    @unique
+    tenantId  String
+    services  Service[]
+    tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-    // Relations
-    tenantId String
-    tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-    services Service[]
-
-    // Indexes
     @@index([tenantId])
     @@index([slug])
     @@index([deletedAt])
 }
 
 model Service {
-    id          String    @id @default(cuid())
-    name        String
-    code        String?   @unique
-    description String?
-    price       Float
-    isActive    Boolean   @default(true)
-    createdAt   DateTime  @default(now())
-    updatedAt   DateTime  @default(now()) @updatedAt
-    deletedAt   DateTime?
-
-    // Relations
+    id                String              @id @default(cuid())
+    name              String
+    code              String?             @unique
+    description       String?
+    price             Float
+    isActive          Boolean             @default(true)
+    createdAt         DateTime            @default(now())
+    updatedAt         DateTime            @default(now()) @updatedAt
+    deletedAt         DateTime?
     tenantId          String
     categoryId        String?
-    Tenant            Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-    Category          ServiceCategory?    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-    ReportInvoiceItem ReportInvoiceItem[]
     ReportDetail      ReportDetail[]
-    ReportTemplate    ReportTemplate[]
     ReportInvoice     ReportInvoice[]
+    ReportInvoiceItem ReportInvoiceItem[]
+    ReportTemplate    ReportTemplate[]
+    Category          ServiceCategory?    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+    Tenant            Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-    // Indexes
     @@index([tenantId])
     @@index([categoryId])
     @@index([code])
@@ -666,38 +609,30 @@ model Service {
 
 // ========== CUSTOMER MANAGEMENT ==========
 model Customer {
-    id            String         @id @default(cuid())
-    title         UserTitle?     @default(MR)
-    name          String
-    email         String?
-    phone         String?
-    dateOfBirth   DateTime?
-    gender        Gender?
-    bloodGroup    BloodGroup?
-    maritalStatus MaritalStatus?
-
-    // Identification
-    aadharNumber   String? @unique
-    panNumber      String? @unique
-    passportNumber String? @unique
-
-    // Medical Information
+    id                String            @id @default(cuid())
+    title             UserTitle?        @default(MR)
+    name              String
+    email             String?
+    phone             String?
+    dateOfBirth       DateTime?
+    gender            Gender?
+    bloodGroup        BloodGroup?
+    maritalStatus     MaritalStatus?
+    aadharNumber      String?           @unique
+    panNumber         String?           @unique
+    passportNumber    String?           @unique
     knownAllergies    String[]
     chronicConditions String[]
     medications       String[]
-
-    createdAt DateTime  @default(now())
-    updatedAt DateTime  @default(now()) @updatedAt
-    deletedAt DateTime?
-
-    // Relations
+    createdAt         DateTime          @default(now())
+    updatedAt         DateTime          @default(now()) @updatedAt
+    deletedAt         DateTime?
     tenantId          String
     tenant            Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-    ReportInvoice     ReportInvoice[]
-    Report            Report[]
     customerAddresses CustomerAddress[]
+    Report            Report[]
+    ReportInvoice     ReportInvoice[]
 
-    // Indexes
     @@index([tenantId])
     @@index([email])
     @@index([phone])
@@ -705,17 +640,15 @@ model Customer {
     @@index([deletedAt])
 }
 
-// Junction table for Customer-Address relationship
 model CustomerAddress {
     id         String   @id @default(cuid())
     customerId String
     addressId  String
     isPrimary  Boolean  @default(true)
     createdAt  DateTime @default(now())
-
-    customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-    address  Address  @relation(fields: [addressId], references: [id], onDelete: Cascade)
-    Report   Report[]
+    address    Address  @relation(fields: [addressId], references: [id], onDelete: Cascade)
+    customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+    Report     Report[]
 
     @@unique([customerId, addressId])
     @@index([customerId])
@@ -724,33 +657,27 @@ model CustomerAddress {
 
 // ========== DOCTOR MANAGEMENT ==========
 model Doctor {
-    id             String  @id @default(cuid())
-    name           String
-    specialization String?
-    email          String?
-    phone          String?
-    registrationNo String?
-
-    // Practice Information
-    clinicName String?
-    department String?
-
-    status    DoctorStatus @default(ACTIVE)
-    createdAt DateTime     @default(now())
-    updatedAt DateTime     @default(now()) @updatedAt
-    deletedAt DateTime?
-
-    // Relations
+    id                  String                    @id @default(cuid())
+    name                String
+    specialization      String?
+    email               String?
+    phone               String?
+    registrationNo      String?
+    clinicName          String?
+    department          String?
+    status              DoctorStatus              @default(ACTIVE)
+    createdAt           DateTime                  @default(now())
+    updatedAt           DateTime                  @default(now()) @updatedAt
+    deletedAt           DateTime?
     tenantId            String
     tenant              Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-    ReportInvoice       ReportInvoice[]
-    Report              Report[]
     doctorAddresses     DoctorAddress[]
     doctorCommissions   DoctorCommission[]
-    doctorPayments      DoctorCommissionPayment[]
     DoctorCommissionLog DoctorCommissionLog[]
+    doctorPayments      DoctorCommissionPayment[]
+    Report              Report[]
+    ReportInvoice       ReportInvoice[]
 
-    // Indexes
     @@index([tenantId])
     @@index([email])
     @@index([phone])
@@ -758,7 +685,6 @@ model Doctor {
     @@index([specialization])
 }
 
-// Junction table for Doctor-Address relationship
 model DoctorAddress {
     id        String    @id @default(cuid())
     doctorId  String
@@ -766,32 +692,27 @@ model DoctorAddress {
     isPrimary Boolean   @default(true)
     createdAt DateTime  @default(now())
     deletedAt DateTime?
-
-    doctor  Doctor  @relation(fields: [doctorId], references: [id], onDelete: Cascade)
-    address Address @relation(fields: [addressId], references: [id], onDelete: Cascade)
+    address   Address   @relation(fields: [addressId], references: [id], onDelete: Cascade)
+    doctor    Doctor    @relation(fields: [doctorId], references: [id], onDelete: Cascade)
 
     @@unique([doctorId, addressId])
     @@index([doctorId])
     @@index([addressId])
 }
 
-// Doctor commission structure
 model DoctorCommission {
-    id             String    @id @default(cuid())
-    commissionType String // PERCENTAGE, FIXED
-    value          Float
-    isActive       Boolean   @default(true)
-    notes          String?
-    createdAt      DateTime  @default(now())
-    updatedAt      DateTime  @default(now()) @updatedAt
-    deletedAt      DateTime?
-
-    // Relations
+    id                  String                @id @default(cuid())
+    commissionType      String
+    value               Float
+    isActive            Boolean               @default(true)
+    notes               String?
+    createdAt           DateTime              @default(now())
+    updatedAt           DateTime              @default(now()) @updatedAt
+    deletedAt           DateTime?
     doctorId            String
     doctor              Doctor                @relation(fields: [doctorId], references: [id], onDelete: Cascade)
     DoctorCommissionLog DoctorCommissionLog[]
 
-    // Indexes
     @@index([doctorId])
     @@index([isActive])
     @@index([commissionType])
@@ -803,18 +724,16 @@ model DoctorCommissionLog {
     doctorId         String
     invoiceId        String?
     commissionId     String
-    reportDetailId   String?
-    commissionAmt    Float
-    commissionStatus DoctorCommissionStatus @default(PENDING)
     createdAt        DateTime               @default(now())
     updatedAt        DateTime               @default(now()) @updatedAt
+    commissionAmt    Float
+    commissionStatus DoctorCommissionStatus @default(PENDING)
+    reportDetailId   String?
+    commission       DoctorCommission       @relation(fields: [commissionId], references: [id], onDelete: Cascade)
+    doctor           Doctor                 @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+    invoice          ReportInvoice?         @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+    reportDetail     ReportDetail?          @relation(fields: [reportDetailId], references: [id], onDelete: Cascade)
 
-    commission   DoctorCommission @relation(fields: [commissionId], references: [id], onDelete: Cascade)
-    doctor       Doctor           @relation(fields: [doctorId], references: [id], onDelete: Cascade)
-    invoice      ReportInvoice?   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-    reportDetail ReportDetail?    @relation(fields: [reportDetailId], references: [id], onDelete: Cascade)
-
-    // Indexes
     @@index([doctorId])
     @@index([invoiceId])
     @@index([commissionId])
@@ -822,7 +741,6 @@ model DoctorCommissionLog {
     @@index([updatedAt])
 }
 
-// Commission payment tracking
 model DoctorCommissionPayment {
     id            String        @id @default(cuid())
     amount        Float
@@ -834,12 +752,9 @@ model DoctorCommissionPayment {
     createdAt     DateTime      @default(now())
     updatedAt     DateTime      @default(now()) @updatedAt
     deletedAt     DateTime?
+    doctorId      String
+    doctor        Doctor        @relation(fields: [doctorId], references: [id], onDelete: Cascade)
 
-    // Relations
-    doctorId String
-    doctor   Doctor @relation(fields: [doctorId], references: [id], onDelete: Cascade)
-
-    // Indexes
     @@index([doctorId])
     @@index([paymentDate])
     @@index([status])
@@ -851,34 +766,29 @@ model DoctorCommissionPayment {
 
 // ========== BILLING ==========
 model ReportInvoice {
-    id          String        @id @default(cuid())
+    id          String                 @id @default(cuid())
     totalAmount Float
-    discount    Float         @default(0)
+    discount    Float                  @default(0)
     netAmount   Float
     paymentType PaymentType
-    status      InvoiceStatus @default(PAID)
-    issuedAt    DateTime      @default(now())
-    createdAt   DateTime      @default(now())
-    updatedAt   DateTime      @default(now()) @updatedAt
+    status      InvoiceStatus          @default(PAID)
+    issuedAt    DateTime               @default(now())
+    createdAt   DateTime               @default(now())
+    updatedAt   DateTime               @default(now()) @updatedAt
     deletedAt   DateTime?
+    tenantId    String
+    customerId  String
+    doctorId    String?
+    serviceId   String?
+    logs        DoctorCommissionLog[]
+    Report      Report[]
+    customer    Customer               @relation(fields: [customerId], references: [id], onDelete: Cascade)
+    doctor      Doctor?                @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+    Service     Service?               @relation(fields: [serviceId], references: [id])
+    tenant      Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+    items       ReportInvoiceItem[]
+    payments    ReportInvoicePayment[]
 
-    // Relations
-    tenantId   String
-    customerId String
-    doctorId   String?
-
-    tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-    customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-    doctor   Doctor?  @relation(fields: [doctorId], references: [id], onDelete: Cascade)
-
-    items     ReportInvoiceItem[]
-    payments  ReportInvoicePayment[]
-    logs      DoctorCommissionLog[]
-    Report    Report[]
-    Service   Service?               @relation(fields: [serviceId], references: [id])
-    serviceId String?
-
-    // Indexes
     @@index([tenantId])
     @@index([customerId])
     @@index([doctorId])
@@ -888,21 +798,17 @@ model ReportInvoice {
 }
 
 model ReportInvoiceItem {
-    id        String   @id @default(cuid())
-    quantity  Int      @default(1)
+    id        String        @id @default(cuid())
+    quantity  Int           @default(1)
     price     Float
-    discount  Float    @default(0)
+    discount  Float         @default(0)
     total     Float
-    createdAt DateTime @default(now())
-
-    // Relations
+    createdAt DateTime      @default(now())
     invoiceId String
     serviceId String
+    invoice   ReportInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+    service   Service       @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
-    invoice ReportInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-    service Service       @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-
-    // Indexes
     @@index([invoiceId])
     @@index([serviceId])
 }
@@ -918,15 +824,11 @@ model ReportInvoicePayment {
     createdAt     DateTime      @default(now())
     updatedAt     DateTime      @default(now()) @updatedAt
     deletedAt     DateTime?
+    invoiceId     String
+    tenantId      String
+    invoice       ReportInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+    tenant        Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-    // Relations
-    invoiceId String
-    tenantId  String
-
-    invoice ReportInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-    tenant  Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-    // Indexes
     @@index([invoiceId])
     @@index([tenantId])
     @@index([status])
@@ -938,59 +840,51 @@ model ReportInvoicePayment {
 
 // ========== REPORT TEMPLATE MANAGEMENT ==========
 model ReportTemplate {
-    id        String    @id @default(cuid())
-    name      String
-    unit      String?
-    reference String?
-    notes     String?
-    isActive  Boolean   @default(true)
-    createdAt DateTime  @default(now())
-    updatedAt DateTime  @default(now()) @updatedAt
-    deletedAt DateTime?
-
-    // Relations
-    tenantId  String
-    serviceId String
-
-    tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-    service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-
+    id              String            @id @default(cuid())
+    createdAt       DateTime          @default(now())
+    updatedAt       DateTime          @default(now()) @updatedAt
+    deletedAt       DateTime?
+    name            String
+    notes           String?
+    isActive        Boolean           @default(true)
+    tenantId        String
+    serviceId       String
+    reference       String?
+    unit            String?
     ReportDetails   ReportDetail[]
     ReportParameter ReportParameter[]
+    service         Service           @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+    tenant          Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-    // Indexes
     @@index([tenantId])
     @@index([serviceId])
     @@index([deletedAt])
 }
 
 model ReportParameter {
-    id             String    @id @default(cuid())
+    id             String         @id @default(cuid())
     name           String
     unit           String?
     method         String?
     turnaroundTime Int?
-    isCritical     Boolean   @default(false)
+    isCritical     Boolean        @default(false)
     criticalLow    Float?
     criticalHigh   Float?
-    genderSpecific Boolean   @default(false)
-    ageSpecific    Boolean   @default(false)
+    genderSpecific Boolean        @default(false)
+    ageSpecific    Boolean        @default(false)
     notes          String?
     referenceMin   Float?
     referenceMax   Float?
     gender         Gender?
     ageMin         Int?
     ageMax         Int?
-    createdAt      DateTime  @default(now())
-    updatedAt      DateTime  @default(now()) @updatedAt
+    createdAt      DateTime       @default(now())
+    updatedAt      DateTime       @default(now()) @updatedAt
     deletedAt      DateTime?
+    templateId     String
+    details        ReportDetail[]
+    template       ReportTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
-    // Relations
-    templateId String
-    template   ReportTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
-    details    ReportDetail[]
-
-    // Indexes
     @@index([templateId])
     @@index([name])
     @@index([isCritical])
@@ -1010,44 +904,38 @@ model ReportParameter {
 
 // ========== REPORTS ==========
 model Report {
-    id             String        @id @default(cuid())
-    reportCode     String?       @unique
-    fileUrl        String?
-    collectedPlace String? // If not using customer's address or lab address
-    notes          String?
-    status         ReportStatus  @default(PENDING)
-    customerType   CustomerType?
-    issuedAt       DateTime?
-    collectedAt    DateTime?
-    createdAt      DateTime      @default(now())
-    updatedAt      DateTime      @default(now()) @updatedAt
-    deletedAt      DateTime?
-    version        Int           @default(1)
-
-    // Relations
+    id                String            @id @default(cuid())
+    reportCode        String?           @unique
+    fileUrl           String?
+    collectedPlace    String?
+    notes             String?
+    status            ReportStatus      @default(PENDING)
+    customerType      CustomerType?
+    issuedAt          DateTime?
+    collectedAt       DateTime?
+    createdAt         DateTime          @default(now())
+    updatedAt         DateTime          @default(now()) @updatedAt
+    deletedAt         DateTime?
+    version           Int               @default(1)
     tenantId          String
     customerId        String
     doctorId          String?
     invoiceId         String
     createdBy         String?
     collectedBy       String?
-    customerAddressId String? // If using customer's address 
-    labAddressId      String? // If using lab address
+    customerAddressId String?
+    labAddressId      String?
+    collectedByUser   TenantUser?       @relation("SampleCollectedBy", fields: [collectedBy], references: [id])
+    createdByUser     TenantUser?       @relation("ReportCreatedBy", fields: [createdBy], references: [id])
+    customerAddress   CustomerAddress?  @relation(fields: [customerAddressId], references: [id])
+    customer          Customer          @relation(fields: [customerId], references: [id], onDelete: Cascade)
+    doctor            Doctor?           @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+    invoice           ReportInvoice     @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+    labAddress        TenantAddress?    @relation(fields: [labAddressId], references: [id])
+    tenant            Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+    updateLog         ReportChangeLog[]
+    details           ReportDetail[]
 
-    tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-    customer  Customer          @relation(fields: [customerId], references: [id], onDelete: Cascade)
-    doctor    Doctor?           @relation(fields: [doctorId], references: [id], onDelete: Cascade)
-    invoice   ReportInvoice     @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-    details   ReportDetail[]
-    updateLog ReportChangeLog[]
-
-    // Relations to staff users via TenantUser
-    createdByUser   TenantUser?      @relation("ReportCreatedBy", fields: [createdBy], references: [id])
-    collectedByUser TenantUser?      @relation("SampleCollectedBy", fields: [collectedBy], references: [id])
-    customerAddress CustomerAddress? @relation(fields: [customerAddressId], references: [id])
-    labAddress      TenantAddress?   @relation(fields: [labAddressId], references: [id])
-
-    // Indexes
     @@index([invoiceId])
     @@index([tenantId])
     @@index([doctorId])
@@ -1061,24 +949,20 @@ model Report {
     @@index([reportCode])
 }
 
-// ========== REPORT EDIT HISTORY ==========
 model ReportChangeLog {
     id               String                @id @default(cuid())
     reportId         String
-    userId           String?
     changedById      String
     editVersion      Int
     changes          Json
     timestamp        DateTime              @default(now())
     conflictResolved Boolean               @default(false)
     action           ReportChangeLogAction @default(CREATED)
+    userId           String?
+    changedBy        TenantUser            @relation("ReportChangedByTenantUser", fields: [changedById], references: [id])
+    report           Report                @relation(fields: [reportId], references: [id], onDelete: Cascade)
+    User             User?                 @relation(fields: [userId], references: [id])
 
-    // Relations
-    User      User?      @relation(fields: [userId], references: [id])
-    changedBy TenantUser @relation("ReportChangedByTenantUser", fields: [changedById], references: [id])
-    report    Report     @relation(fields: [reportId], references: [id], onDelete: Cascade)
-
-    // Indexes
     @@index([reportId, editVersion])
     @@index([timestamp])
     @@index([changedById])
@@ -1086,7 +970,7 @@ model ReportChangeLog {
 }
 
 model ReportDetail {
-    id                    String    @id @default(cuid())
+    id                    String                @id @default(cuid())
     parameterName         String?
     parameterUnit         String?
     parameterReferenceMin Float?
@@ -1094,23 +978,20 @@ model ReportDetail {
     resultText            String?
     resultValue           Float?
     remarks               String?
-    amount                Float?
-    createdAt             DateTime  @default(now())
-    lastEditedAt          DateTime  @default(now()) @updatedAt
+    createdAt             DateTime              @default(now())
+    lastEditedAt          DateTime              @default(now()) @updatedAt
     deletedAt             DateTime?
+    reportId              String
+    parameterId           String
+    serviceId             String?
+    amount                Float?
+    reportTemplateId      String?
+    DoctorCommissionLog   DoctorCommissionLog[]
+    parameter             ReportParameter       @relation(fields: [parameterId], references: [id], onDelete: Cascade)
+    report                Report                @relation(fields: [reportId], references: [id], onDelete: Cascade)
+    ReportTemplate        ReportTemplate?       @relation(fields: [reportTemplateId], references: [id])
+    Service               Service?              @relation(fields: [serviceId], references: [id])
 
-    // Relations
-    reportId            String
-    parameterId         String
-    report              Report                @relation(fields: [reportId], references: [id], onDelete: Cascade)
-    parameter           ReportParameter       @relation(fields: [parameterId], references: [id], onDelete: Cascade)
-    serviceId           String?
-    Service             Service?              @relation(fields: [serviceId], references: [id])
-    reportTemplateId    String?
-    ReportTemplate      ReportTemplate?       @relation(fields: [reportTemplateId], references: [id])
-    DoctorCommissionLog DoctorCommissionLog[]
-
-    // Indexes
     @@index([reportId])
     @@index([lastEditedAt])
     @@index([parameterId])

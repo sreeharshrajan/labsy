@@ -1,11 +1,9 @@
 'use client';
 
 import { signOut } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 import { useAuthGuard } from '@/hooks/auth/useAuthGuard';
 
 export default function DashboardPage() {
-  const router = useRouter();
   const { session, isLoading, isAuthenticated } = useAuthGuard({
     redirectTo: '/login?redirect=/dashboard',
     requireAuth: true,
@@ -49,7 +47,7 @@ export default function DashboardPage() {
                 <div className="w-8 h-8 bg-gradient-to-r from-[#80CBC4] to-[#FF6E40] rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-sm">M</span>
                 </div>
-                <h1 className="text-xl font-semibold text-[#004D40]">MedLabby Dashboard</h1>
+                <h1 className="text-xl font-semibold text-[#004D40]">MedLabbys Dashboard</h1>
               </div>
             </div>
             <div className="flex items-center space-x-4">

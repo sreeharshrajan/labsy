@@ -59,6 +59,10 @@ export const authConfig = {
         }
 
         try {
+          // Temporarily disable RLS for authentication queries
+          // This is necessary because we need to authenticate before setting RLS context
+          await db.$executeRaw`SELECT set_config('app.is_super_admin', 'true', true);`;
+          
           // Find user by email
           const user = await db.user.findUnique({
             where: { email: (credentials.email as string).toLowerCase() },
@@ -113,6 +117,15 @@ export const authConfig = {
         } catch (error) {
           console.error('Credentials authorization error:', error);
           return null;
+        } finally {
+          // Reset RLS context after authentication
+          try {
+            await db.$executeRaw`SELECT set_config('app.is_super_admin', 'false', true);`;
+            await db.$executeRaw`SELECT set_config('app.current_user_id', '', true);`;
+            await db.$executeRaw`SELECT set_config('app.current_tenant_id', '', true);`;
+          } catch (resetError) {
+            console.error('Error resetting RLS context after auth:', resetError);
+          }
         }
       },
     }),

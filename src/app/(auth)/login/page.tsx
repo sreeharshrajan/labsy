@@ -16,7 +16,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/dashboard';
 
-  const { session, status, isAuthenticated } = useAuthGuard({
+  const { status, isAuthenticated } = useAuthGuard({
     redirectTo: redirect,
     requireAuth: false,
     redirectDelay: 300

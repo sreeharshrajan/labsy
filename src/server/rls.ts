@@ -95,19 +95,19 @@ export async function getCurrentRLSContext(): Promise<{
   const result = await db.$queryRaw<Array<{
     current_user_id: string | null;
     current_tenant_id: string | null;
-    is_super_admin: boolean;
+    is_super_admin: string | null;
   }>>`
     SELECT 
-      current_setting('app.current_user_id', true) as current_user_id,
-      current_setting('app.current_tenant_id', true) as current_tenant_id,
-      COALESCE(current_setting('app.is_super_admin', true)::boolean, false) as is_super_admin;
+      NULLIF(current_setting('app.current_user_id', true), '') as current_user_id,
+      NULLIF(current_setting('app.current_tenant_id', true), '') as current_tenant_id,
+      current_setting('app.is_super_admin', true) as is_super_admin;
   `;
 
   const context = result[0];
   return {
     userId: context?.current_user_id ?? null,
     tenantId: context?.current_tenant_id ?? null,
-    isSuperAdmin: context?.is_super_admin ?? false,
+    isSuperAdmin: context?.is_super_admin === 'true',
   };
 }
 
