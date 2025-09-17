@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { signIn, useSession } from 'next-auth/react';
+import { signIn } from 'next-auth/react';
+import { useAuthGuard } from '@/hooks/auth/useAuthGuard';
 
 function LoginForm() {
   const [email, setEmail] = useState('');
@@ -11,16 +12,15 @@ function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/dashboard';
 
-  useEffect(() => {
-    if (status === 'authenticated' && session) {
-      router.push(redirect);
-    }
-  }, [session, status, router, redirect]);
+  const { session, status, isAuthenticated } = useAuthGuard({
+    redirectTo: redirect,
+    requireAuth: false,
+    redirectDelay: 300
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,8 +51,20 @@ function LoginForm() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#FF6E40] mx-auto"></div>
+          <p className="mt-4 text-[#004D40]">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If already authenticated, show loading while redirecting
+  if (isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#FF6E40] mx-auto"></div>
+          <p className="mt-4 text-[#004D40]">Redirecting to dashboard...</p>
         </div>
       </div>
     );

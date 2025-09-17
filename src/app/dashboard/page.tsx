@@ -1,24 +1,22 @@
 'use client';
 
-import { useSession, signOut } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useAuthGuard } from '@/hooks/auth/useAuthGuard';
 
 export default function DashboardPage() {
-  const { data: session, status } = useSession();
   const router = useRouter();
-
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    }
-  }, [status, router]);
+  const { session, isLoading, isAuthenticated } = useAuthGuard({
+    redirectTo: '/login?redirect=/dashboard',
+    requireAuth: true,
+    redirectDelay: 200
+  });
 
   const handleLogout = async () => {
     await signOut({ callbackUrl: '/login' });
   };
 
-  if (status === 'loading') {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -29,8 +27,14 @@ export default function DashboardPage() {
     );
   }
 
-  if (!session?.user) {
-    return null;
+  if (!isAuthenticated || !session?.user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-[#004D40]">Redirecting to login...</p>
+        </div>
+      </div>
+    );
   }
 
   const user = session.user;
