@@ -4,7 +4,7 @@ import { useAuthGuard } from '@/hooks/auth/useAuthGuard';
 
 export default function DashboardPage() {
   const { session, isLoading, isAuthenticated } = useAuthGuard({
-    redirectTo: '/login?redirect=/dashboard',
+    redirectTo: '/login',
     requireAuth: true,
     redirectDelay: 200
   });

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { useAuthGuard } from '@/hooks/auth/useAuthGuard';
 
@@ -13,11 +13,9 @@ function LoginForm() {
   const [error, setError] = useState('');
 
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirect = searchParams.get('redirect') || '/dashboard';
 
   const { status, isAuthenticated } = useAuthGuard({
-    redirectTo: redirect,
+    redirectTo: '/dashboard',
     requireAuth: false,
     redirectDelay: 300
   });
@@ -38,7 +36,8 @@ function LoginForm() {
       if (result?.error) {
         setError('Invalid email or password');
       } else if (result?.ok) {
-        router.push(redirect);
+        // Let useAuthGuard handle the redirect using stored session data
+        // The redirect will happen automatically through the auth guard
       }
     } catch (error) {
       setError(error as string || 'An error occurred during login');
