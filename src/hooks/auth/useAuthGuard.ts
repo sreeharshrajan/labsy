@@ -51,7 +51,7 @@ export const useAuthGuard = (config: AuthGuardConfig = {}) => {
         setIsRedirecting(false);
       };
     }
-  }, [status, requireAuth, redirectTo, redirectDelay, router]);
+  }, [status, requireAuth, redirectTo, redirectDelay, router, isRedirecting]);
 
   return {
     session,
