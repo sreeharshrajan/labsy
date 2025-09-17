@@ -1,49 +1,28 @@
-import Link from "next/link";
-import { auth } from "@/server/auth";
+import Navigation from "@/components/sections/Navigation";
+import HeroSection from "@/components/sections/HeroSection";
+import FeatureShowcaseSection from "@/components/sections/FeatureShowcaseSection";
+import SecondCTASection from "@/components/sections/SecondCTASection";
+import Footer from "@/components/sections/Footer";
+import CustomCursor from "@/components/ui/CustomCursor";
 
-export default async function Home() {
-  const session = await auth();
-
+export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-      <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
-        <h1 className="text-5xl font-extrabold tracking-tight sm:text-[5rem]">
-          Med<span className="text-[hsl(280,100%,70%)]">Laby</span>
-        </h1>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
-          <Link
-            className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 hover:bg-white/20"
-            href="/login"
-          >
-            <h3 className="text-2xl font-bold">Sign In →</h3>
-            <div className="text-lg">
-              Access your lab management system with email/password or Google OAuth.
-            </div>
-          </Link>
-          <Link
-            className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 hover:bg-white/20"
-            href="/register"
-          >
-            <h3 className="text-2xl font-bold">Create Account →</h3>
-            <div className="text-lg">
-              Set up your lab or organization account with secure authentication.
-            </div>
-          </Link>
-        </div>
-        <div className="flex flex-col items-center gap-2">
-          <div className="flex flex-col items-center justify-center gap-4">
-            <p className="text-center text-2xl text-white">
-              {session && <span>Logged in as {session.user?.name}</span>}
-            </p>
-            <Link
-              href={session ? "/dashboard" : "/login"}
-              className="rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
-            >
-              {session ? "Go to Dashboard" : "Sign in"}
-            </Link>
-          </div>
-        </div>
-      </div>
-    </main>
+    <div className="min-h-screen overflow-x-hidden">
+      <CustomCursor />
+      <Navigation />
+
+      <main className="overflow-x-hidden">
+        <section id="hero" className="overflow-x-hidden">
+          <HeroSection />
+        </section>
+        <section id="features" className="overflow-x-hidden">
+          <FeatureShowcaseSection />
+        </section>
+        <section id="cta" className="overflow-x-hidden">
+          <SecondCTASection />
+        </section>
+      </main>
+      <Footer />
+    </div>
   );
 }
