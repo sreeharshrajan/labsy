@@ -21,7 +21,7 @@ const SimpleFileUpload = React.forwardRef<HTMLInputElement, SimpleFileUploadProp
     className,
     disabled = false,
     placeholder = "Choose file...",
-  }, ref) => {
+  }, _ref) => {
     const [selectedFile, setSelectedFile] = React.useState<File | null>(null)
     const fileInputRef = React.useRef<HTMLInputElement>(null)
 

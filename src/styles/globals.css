@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@import "./presets/brutalist.css";
+@import "./presets/soft-pop.css";
+@import "./presets/tangerine.css";
+
 @layer base {
   :root {
     --background: 0 0% 100%;

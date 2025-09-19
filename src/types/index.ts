@@ -3,6 +3,7 @@
 export * from './database';
 export * from './next-auth';
 export * from './api';
+export * from './preferences';
 
 import type { User } from '@prisma/client';
 

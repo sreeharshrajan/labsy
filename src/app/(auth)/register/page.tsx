@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
@@ -126,12 +127,12 @@ export default function RegisterPage() {
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Or{' '}
-            <a
+            <Link
               href="/login"
               className="font-medium text-blue-600 hover:text-blue-500"
             >
               sign in to existing account
-            </a>
+            </Link>
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

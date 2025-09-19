@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, Suspense } from 'react';
-import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
+import Link from 'next/link';
 import { useAuthGuard } from '@/hooks/auth/useAuthGuard';
 
 function LoginForm() {
@@ -12,7 +12,6 @@ function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const router = useRouter();
 
   const { status, isAuthenticated } = useAuthGuard({
     redirectTo: '/dashboard',
@@ -78,12 +77,12 @@ function LoginForm() {
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Or{' '}
-            <a
+            <Link
               href="/register"
               className="font-medium text-blue-600 hover:text-blue-500"
             >
               create a new account
-            </a>
+            </Link>
           </p>
           <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
             <h3 className="text-sm font-medium text-blue-800 mb-2">Test Credentials:</h3>
@@ -150,9 +149,9 @@ function LoginForm() {
             </div>
 
             <div className="text-sm">
-              <a href="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
+              <Link href="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
                 Forgot your password?
-              </a>
+              </Link>
             </div>
           </div>
 
@@ -176,7 +175,7 @@ function LoginForm() {
 
             <button
               type="button"
-              onClick={() => signIn('google', { callbackUrl: redirect })}
+              onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
               className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
