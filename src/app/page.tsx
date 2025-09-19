@@ -3,7 +3,7 @@ import HeroSection from "@/components/sections/HeroSection";
 import FeatureShowcaseSection from "@/components/sections/FeatureShowcaseSection";
 import SecondCTASection from "@/components/sections/SecondCTASection";
 import Footer from "@/components/sections/Footer";
-import CustomCursor from "@/components/ui/CustomCursor";
+import CustomCursor from "@/components/ui/custom-cursor";
 
 export default function Home() {
   return (
