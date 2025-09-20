@@ -9,8 +9,8 @@ import { Toaster } from "@/components/ui/sonner";
 
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import { getPreference } from "@/server/actions";
-import { THEME_MODE_VALUES, ThemeMode } from "@/types/preferences/theme";
-import { THEME_PRESET_VALUES, ThemePreset } from "@/types/preferences/theme";
+import { THEME_MODE_VALUES, type ThemeMode } from "@/types/preferences/theme";
+import { THEME_PRESET_VALUES, type ThemePreset } from "@/types/preferences/theme";
 import { PreferencesStoreProvider } from "@/stores/preferences/preferences-provider";
 
 export const metadata: Metadata = {
